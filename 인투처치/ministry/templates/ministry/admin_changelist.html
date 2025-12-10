@@ -1,0 +1,11 @@
+{% extends 'admin/change_list.html' %}
+
+{% block object-tools %}
+<span class="d-inline-block" style="margin-right: 5px;">
+    <a href="upload-excel/" class="btn btn-success btn-sm">
+        <i class="fas fa-file-excel"></i> 엑셀 일괄 업로드
+    </a>
+</span>
+
+{{ block.super }}
+{% endblock %}
