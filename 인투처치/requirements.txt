@@ -9,4 +9,5 @@ python-dotenv
 pandas
 openpyxl
 django-jazzmin
+Pillow
 
