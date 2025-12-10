@@ -8,3 +8,4 @@ django-storages
 python-dotenv
 pandas
 openpyxl
+jazzmin
