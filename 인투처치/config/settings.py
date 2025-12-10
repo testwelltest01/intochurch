@@ -130,6 +130,8 @@ USE_TZ = False  # <--- True로 두면 헷갈릴 수 있으니 False로 해서 �
 
 STATIC_URL = 'static/'
 
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 # 트렌디한 관리자 모드 디자인
 JAZZMIN_SETTINGS = {
     # 1. 사이트 제목
@@ -190,6 +192,7 @@ STORAGES = {
 },
 
 }
+
 
 
 
