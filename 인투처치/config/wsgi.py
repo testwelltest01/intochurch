@@ -1,3 +1,4 @@
+
 """
 WSGI config for config project.
 
@@ -14,3 +15,6 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
 application = get_wsgi_application()
+
+
+app = application  # <--- ★ 이 줄이 없으면 Vercel이 시동을 못 겁니다!
