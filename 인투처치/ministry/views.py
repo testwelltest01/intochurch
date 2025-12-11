@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator # 페이징 도구 (게시판 페이지 넘기는 기능)
 from .models import WeeklyReport, FinancialTransaction, ChurchReview, SlideImage
 from .forms import ReviewForm
+from notion_client import Client
 
 """
 views.py는 '웹사이트의 로직(Logic)'을 담당하는 곳입니다.
@@ -97,3 +98,46 @@ def dashboard(request):
     # render: 최종적으로 HTML 파일을 그려서 사용자에게 보내줍니다.
     # 'ministry/dashboard.html' 템플릿에 context 데이터를 섞어서 완성된 페이지를 만듭니다.
     return render(request, 'ministry/dashboard.html', context)
+
+def home(request):
+    # 1. 기존 데이터 (통계 등)
+
+
+    # 2. [추가] 노션 데이터 가져오기 로직
+    notion_notices = []
+    try:
+        notion = Client(auth=os.environ.get("NOTION_API_KEY"))
+        db_id = os.environ.get("NOTION_DATABASE_ID")
+        
+        # 노션에 "데이터 내놔" 요청
+        response = notion.databases.query(database_id=db_id)
+        
+
+        # 가져온 데이터를 예쁘게 가공하기
+        for page in response['results']:
+            props = page['properties']
+            
+            # 제목 가져오기 (만약 제목이 비어있으면 '제목 없음' 처리)
+            title_list = props.get('이름', {}).get('title', [])
+            title = title_list[0]['plain_text'] if title_list else "제목 없음"
+            
+            # 날짜 가져오기 (날짜가 없으면 패스)
+            date_prop = props.get('날짜', {}).get('date', {})
+            date = date_prop.get('start', '') if date_prop else ""
+            
+            # 리스트에 추가
+            notion_notices.append({
+                'title': title,
+                'date': date,
+                'url': page['url'] # 클릭하면 노션으로 이동하게!
+            })
+            
+    except Exception as e:
+        print(f"노션 연결 실패: {e}") # 에러가 나도 홈페이지는 꺼지지 않게 방어
+
+    # 3. HTML로 보내기
+    return render(request, 'ministry/dashboard.html', {
+        'stat': stat,  # 기존 통계
+        'slides': slides, # 기존 슬라이드
+        'notion_notices': notion_notices, # <--- ★ 새로 추가된 노션 데이터!
+    })
