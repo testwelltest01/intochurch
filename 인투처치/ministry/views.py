@@ -1,143 +1,107 @@
-# ministry/views.py
-
-from django.shortcuts import render, redirect
+import os
+import json
+import urllib.request
+from django.shortcuts import render
 from django.utils import timezone
-from django.contrib import messages
-from django.core.paginator import Paginator # 페이징 도구 (게시판 페이지 넘기는 기능)
-from .models import WeeklyReport, FinancialTransaction, ChurchReview, SlideImage
-from .forms import ReviewForm
-from notion_client import Client
-
-"""
-views.py는 '웹사이트의 로직(Logic)'을 담당하는 곳입니다.
-사용자가 어떤 주소로 접속하면(Request), 그에 맞는 처리를 하고, 
-결과 화면(Response)을 보여주는 함수(View Function)들이 모여 있습니다.
-"""
-
-def get_client_ip(request):
-    """
-    접속한 사용자의 IP 주소를 알아내는 도우미 함수입니다.
-    리뷰 중복 작성을 방지하기 위해 사용합니다.
-    """
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
-
-def dashboard(request):
-    """
-    메인 화면(대시보드)을 보여주는 메인 뷰 함수입니다.
-    사용자가 홈페이지에 들어오면 이 함수가 실행됩니다.
-    """
-    
-    # --- [1. 리뷰 작성 처리 (POST 요청)] ---
-    # 사용자가 '작성 완료' 버튼을 눌러서 데이터를 보낼 때 (POST 방식)
-    if request.method == 'POST':
-        # 사용자가 입력한 데이터를 폼(Form)에 채워 넣습니다.
-        form = ReviewForm(request.POST)
-        
-        # 입력한 내용에 문제가 없는지 검사합니다 (예: 내용이 비어있지 않은지).
-        if form.is_valid():
-            user_ip = get_client_ip(request) # IP 확인
-            today = timezone.now().date()    # 오늘 날짜 확인
-            
-            # 오늘 이미 쓴 글이 있는지 DB에서 찾아봅니다. (같은 IP, 오늘 날짜)
-            if ChurchReview.objects.filter(ip_address=user_ip, created_at__date=today).exists():
-                # 이미 썼으면 에러 메시지를 띄웁니다.
-                messages.error(request, "⚠️ 리뷰는 하루에 한 번만 등록할 수 있습니다.")
-            else:
-                # 문제 없으면 저장 준비!
-                review = form.save(commit=False) # 바로 저장하지 않고 잠시 대기 (IP 주소 추가를 위해)
-                review.ip_address = user_ip      # IP 주소를 채워 넣고
-                review.save()                    # 진짜로 DB에 저장합니다.
-                
-                # 성공 메시지를 띄우고
-                messages.success(request, "✅ 소중한 의견 감사합니다!")
-                
-                # 메인 화면('home')으로 새로고침(리다이렉트) 합니다.
-                # 이걸 안 하면 '새로고침' 할 때마다 글이 또 써질 수 있습니다.
-                return redirect('home')
-
-    # --- [2. 데이터 조회 및 화면 보여주기 (GET 요청)] ---
-    # 그냥 페이지에 접속했을 때 (GET 방식)
-    
-    # (1) 가장 최근 보고서와 슬라이드 사진 가져오기
-    # WeeklyReport.objects.order_by('-date').first(): 날짜 내림차순(최신순)으로 정렬해서 첫 번째 것만 가져와라.
-    latest_stat = WeeklyReport.objects.order_by('-date').first()
-    # SlideImage.objects.filter(is_active=True): '사용 중(is_active=True)'인 사진들만 가져와라.
-    slides = SlideImage.objects.filter(is_active=True).order_by('order')
-
-    # (2) 재정 장부 페이지네이션 (1, 2, 3페이지...)
-    all_transactions = FinancialTransaction.objects.order_by('-transaction_date')
-    tx_paginator = Paginator(all_transactions, 10) # 한 페이지에 10개씩 자르기
-    
-    # 주소창의 ?tx_page=2 같은 파라미터를 읽습니다. 없으면 1페이지로 간주합니다.
-    tx_page = request.GET.get('tx_page') 
-    transactions = tx_paginator.get_page(tx_page) # 해당 페이지의 데이터만 가져옵니다.
-
-    # (3) 리뷰 페이지네이션
-    all_reviews = ChurchReview.objects.order_by('-created_at')
-    review_paginator = Paginator(all_reviews, 10) # 10개씩 자르기
-    
-    # 리뷰는 ?review_page=2 처럼 다른 이름의 파라미터를 씁니다.
-    # 그래야 재정 장부 페이지를 넘겼을 때 리뷰 페이지는 그대로 있을 수 있습니다.
-    review_page = request.GET.get('review_page') 
-    reviews = review_paginator.get_page(review_page)
-
-    # context (꾸러미): HTML 파일로 보낼 데이터들을 딕셔너리에 담습니다.
-    # HTML에서는 {{ stat }}, {{ reviews }} 처럼 여기서 정한 이름(Key)으로 꺼내 씁니다.
-    context = {
-        'stat': latest_stat,
-        'transactions': transactions,
-        'reviews': reviews,
-        'slides': slides,
-    }
-    
-    # render: 최종적으로 HTML 파일을 그려서 사용자에게 보내줍니다.
-    # 'ministry/dashboard.html' 템플릿에 context 데이터를 섞어서 완성된 페이지를 만듭니다.
-    return render(request, 'ministry/dashboard.html', context)
+from .models import WeeklyReport, FinancialTransaction, SlideImage, ChurchReview
 
 def home(request):
-    # 1. 기존 데이터 (통계 등)
+    # --- 1. 기존 통계 데이터 처리 ---
+    today = timezone.now().date()
+    last_report = WeeklyReport.objects.filter(date__lte=today).order_by('-date').first()
+    
+    stat = None
+    if last_report:
+        stat = {
+            'worship_attendance': last_report.worship_attendance,
+            'new_comers': last_report.new_comers,
+            'offering_total': last_report.offering_total,
+            'date': last_report.date
+        }
 
+    # --- 2. 메인 슬라이드 사진 ---
+    slides = SlideImage.objects.filter(is_active=True).order_by('order')
 
-    # 2. [추가] 노션 데이터 가져오기 로직
+    # --- 3. 최근 재정 내역 (5개) ---
+    recent_transactions = FinancialTransaction.objects.order_by('-transaction_date')[:5]
+
+    # --- 4. 최근 리뷰 (3개) ---
+    recent_reviews = ChurchReview.objects.order_by('-created_at')[:3]
+
+    # --- 5. [업그레이드] 노션 모든 데이터 가져오기 ---
     notion_notices = []
     try:
-        notion = Client(auth=os.environ.get("NOTION_API_KEY"))
+        api_key = os.environ.get("NOTION_API_KEY")
         db_id = os.environ.get("NOTION_DATABASE_ID")
-        
-        # 노션에 "데이터 내놔" 요청
-        response = notion.databases.query(database_id=db_id)
-        
 
-        # 가져온 데이터를 예쁘게 가공하기
-        for page in response['results']:
-            props = page['properties']
+        if api_key and db_id:
+            url = f"https://api.notion.com/v1/databases/{db_id}/query"
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Notion-Version": "2022-06-28", 
+                "Content-Type": "application/json"
+            }
+            # 날짜 최신순 정렬
+            payload = {
+                "page_size": 5,
+                "sorts": [{"property": "날짜", "direction": "descending"}]
+            }
+            data = json.dumps(payload).encode("utf-8")
             
-            # 제목 가져오기 (만약 제목이 비어있으면 '제목 없음' 처리)
-            title_list = props.get('이름', {}).get('title', [])
-            title = title_list[0]['plain_text'] if title_list else "제목 없음"
-            
-            # 날짜 가져오기 (날짜가 없으면 패스)
-            date_prop = props.get('날짜', {}).get('date', {})
-            date = date_prop.get('start', '') if date_prop else ""
-            
-            # 리스트에 추가
-            notion_notices.append({
-                'title': title,
-                'date': date,
-                'url': page['url'] # 클릭하면 노션으로 이동하게!
-            })
+            req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+            with urllib.request.urlopen(req) as response:
+                response_body = response.read().decode("utf-8")
+                json_data = json.loads(response_body)
+                
+                for page in json_data['results']:
+                    props = page['properties']
+                    
+                    # 1. 이름 (제목)
+                    title = "제목 없음"
+                    if '이름' in props and props['이름']['title']:
+                        title = props['이름']['title'][0]['plain_text']
+                    
+                    # 2. 날짜
+                    date_str = ""
+                    if '날짜' in props and props['날짜']['date']:
+                        date_str = props['날짜']['date']['start']
+
+                    # 3. 텍스트 (본문 내용)
+                    text_content = ""
+                    if '텍스트' in props and props['텍스트']['rich_text']:
+                        # 여러 줄일 경우를 대비해 합칩니다
+                        text_content = "".join([t['plain_text'] for t in props['텍스트']['rich_text']])
+
+                    # 4. 파일과 미디어 (다운로드 링크)
+                    file_url = ""
+                    file_name = ""
+                    if '파일과 미디어' in props and props['파일과 미디어']['files']:
+                        file_info = props['파일과 미디어']['files'][0]
+                        file_name = file_info.get('name', '첨부파일')
+                        # 노션에 직접 올린 파일 vs 외부 링크 구분
+                        if 'file' in file_info:
+                            file_url = file_info['file']['url']
+                        elif 'external' in file_info:
+                            file_url = file_info['external']['url']
+
+                    notion_notices.append({
+                        'title': title,
+                        'date': date_str,
+                        'text': text_content, # 추가됨
+                        'file_url': file_url, # 추가됨
+                        'file_name': file_name, # 추가됨
+                        'url': page['url']
+                    })
+                    
+            print(f"✅ 노션 데이터 {len(notion_notices)}개 로드 완료!")
             
     except Exception as e:
-        print(f"노션 연결 실패: {e}") # 에러가 나도 홈페이지는 꺼지지 않게 방어
+        print(f"❌ 노션 연동 오류: {e}")
 
-    # 3. HTML로 보내기
     return render(request, 'ministry/dashboard.html', {
-        'stat': stat,  # 기존 통계
-        'slides': slides, # 기존 슬라이드
-        'notion_notices': notion_notices, # <--- ★ 새로 추가된 노션 데이터!
+        'stat': stat,
+        'slides': slides,
+        'transactions': recent_transactions,
+        'reviews': recent_reviews,
+        'notion_notices': notion_notices,
     })

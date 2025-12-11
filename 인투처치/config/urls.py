@@ -22,7 +22,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.dashboard, name='home'), # 따옴표 사이를 비워두면 메인화면이 됩니다
+    path('', views.home, name='home'), # 따옴표 사이를 비워두면 메인화면이 됩니다
 ]
 
 if settings.DEBUG:
