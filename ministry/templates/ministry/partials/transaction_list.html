@@ -1,0 +1,71 @@
+<div
+    class="bg-white dark:bg-slate-800 shadow-lg rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Description
+                    </th>
+                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
+                        Amount</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                {% for tx in transactions %}
+                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                    <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-mono">
+                        {{tx.transaction_date|date:"Y.m.d" }}</td>
+                    <td class="px-6 py-4">
+                        <span
+                            class="px-2 py-1 text-xs font-bold rounded-full {% if tx.type == 'IN' %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400{% else %}bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400{% endif %}">
+                            {{ tx.get_type_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-slate-900 dark:text-white font-medium">{{ tx.description }}</div>
+                        <div class="text-xs text-slate-400">{{ tx.category }}</div>
+                    </td>
+                    <td
+                        class="px-6 py-4 text-right text-sm font-mono font-bold {% if tx.type == 'IN' %}text-green-600 dark:text-green-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                        {% if tx.type == 'OUT' %}-{% endif %}{{ tx.amount }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="p-8 text-center text-slate-500">데이터가 없습니다.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination (simplified) -->
+{% if transactions.has_other_pages %}
+<div class="mt-12 flex justify-center space-x-2">
+    {% if transactions.has_previous %}
+    <button hx-get="?tx_page={{ transactions.previous_page_number }}" hx-target="#transaction-list-container"
+        hx-swap="innerHTML"
+        class="px-3 py-1 rounded-md text-sm font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition">
+        &laquo;
+    </button>
+    {% endif %}
+
+    {% for i in transactions.paginator.page_range %}
+    <button hx-get="?tx_page={{ i }}" hx-target="#transaction-list-container" hx-swap="innerHTML"
+        class="px-3 py-1 rounded-md text-sm font-bold {% if transactions.number == i %}bg-brand-600 text-white shadow-lg shadow-brand-500/30{% else %}bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700{% endif %} transition">
+        {{ i }}
+    </button>
+    {% endfor %}
+
+    {% if transactions.has_next %}
+    <button hx-get="?tx_page={{ transactions.next_page_number }}" hx-target="#transaction-list-container"
+        hx-swap="innerHTML"
+        class="px-3 py-1 rounded-md text-sm font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition">
+        &raquo;
+    </button>
+    {% endif %}
+</div>
+{% endif %}

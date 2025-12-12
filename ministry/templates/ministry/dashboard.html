@@ -223,60 +223,9 @@
     <!-- Financial Section -->
     <div id="financial-section" class="mb-20 scroll-mt-24" data-aos="fade-up">
         <h2 class="text-3xl font-bold mb-8 text-slate-800 dark:text-white">💸 재정 투명성 보고</h2>
-        <div
-            class="bg-white dark:bg-slate-800 shadow-lg rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Description
-                            </th>
-                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
-                                Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
-                        {% for tx in transactions %}
-                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                            <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-mono">
-                                {{tx.transaction_date|date:"Y.m.d" }}</td>
-                            <td class="px-6 py-4">
-                                <span
-                                    class="px-2 py-1 text-xs font-bold rounded-full {% if tx.type == 'IN' %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400{% else %}bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400{% endif %}">
-                                    {{ tx.get_type_display }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-slate-900 dark:text-white font-medium">{{ tx.description }}</div>
-                                <div class="text-xs text-slate-400">{{ tx.category }}</div>
-                            </td>
-                            <td
-                                class="px-6 py-4 text-right text-sm font-mono font-bold {% if tx.type == 'IN' %}text-green-600 dark:text-green-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
-                                {% if tx.type == 'OUT' %}-{% endif %}{{ tx.amount }}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="p-8 text-center text-slate-500">데이터가 없습니다.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+        <div id="transaction-list-container">
+            {% include 'ministry/partials/transaction_list.html' %}
         </div>
-        <!-- Pagination (simplified) -->
-        {% if transactions.has_other_pages %}
-        <div class="mt-6 flex justify-center space-x-2">
-            {% for i in transactions.paginator.page_range %}
-            <a href="?tx_page={{ i }}#financial-section"
-                class="px-3 py-1 rounded-md text-sm font-bold {% if transactions.number == i %}bg-brand-600 text-white shadow-lg shadow-brand-500/30{% else %}bg-white text-slate-600 hover:bg-slate-100{% endif %} transition">
-                {{ i }}
-            </a>
-            {% endfor %}
-        </div>
-        {% endif %}
     </div>
 
     <!-- Review Section -->
@@ -290,6 +239,16 @@
 
                     <div
                         class="bg-gradient-to-br from-brand-50 to-white dark:from-slate-800 dark:to-slate-800 rounded-2xl p-6 shadow-lg border border-brand-100 dark:border-slate-700">
+                        {% if has_reviewed_today %}
+                        <div class="text-center py-12">
+                            <div class="text-4xl mb-4">🕊️</div>
+                            <h3 class="text-xl font-bold text-brand-600 dark:text-brand-400 mb-2">소중한 의견 감사합니다!</h3>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm">
+                                오늘 작성해주신 리뷰는 잘 전달되었습니다.<br>
+                                내일 다시 들려주세요.
+                            </p>
+                        </div>
+                        {% else %}
                         <form method="POST" action="#review-section" class="space-y-4">
                             {% csrf_token %}
                             <div>
@@ -325,40 +284,15 @@
                                 리뷰 등록하기
                             </button>
                         </form>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
             <!-- Review Grid -->
             <div class="lg:col-span-2" data-aos="fade-left">
-                <div class="group-review-grid gap-4 columns-1 md:columns-2 space-y-4">
-                    {% for review in reviews %}
-                    <div
-                        class="break-inside-avoid bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition">
-                        <div class="flex items-center mb-4">
-                            <div
-                                class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                                {{ review.author_name|slice:":1" }}
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-bold text-slate-900 dark:text-white">{{ review.author_name }}</p>
-                                <div class="flex text-yellow-400 text-xs">
-                                    {% if review.rating >= 1 %}★{% else %}☆{% endif %}
-                                    {% if review.rating >= 2 %}★{% else %}☆{% endif %}
-                                    {% if review.rating >= 3 %}★{% else %}☆{% endif %}
-                                    {% if review.rating >= 4 %}★{% else %}☆{% endif %}
-                                    {% if review.rating >= 5 %}★{% else %}☆{% endif %}
-                                </div>
-                            </div>
-                            <span class="ml-auto text-xs text-slate-400">{{ review.created_at|date:"Y.m.d" }}</span>
-                        </div>
-                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
-                            {{ review.content }}
-                        </p>
-                    </div>
-                    {% empty %}
-                    <div class="bg-slate-50 p-8 rounded text-center col-span-2">아직 리뷰가 없습니다. 첫 리뷰를 남겨주세요!</div>
-                    {% endfor %}
+                <div id="review-list-container">
+                    {% include 'ministry/partials/review_list.html' %}
                 </div>
             </div>
         </div>

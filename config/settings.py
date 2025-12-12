@@ -213,11 +213,13 @@ if AWS_STORAGE_BUCKET_NAME:
 else:
     AWS_S3_CUSTOM_DOMAIN = None
 
-# S3 보안 및 동작 설정 (보통 그대로 둡니다)
+# S3 보안 및 동작 설정
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 AWS_S3_VERIFY = True
+AWS_S3_ADDRESSING_STYLE = 'virtual' # https://bucket.s3.region.amazonaws.com 형식 강제
+AWS_S3_URL_PROTOCOL = 'https:'
 
 # 서명된 URL(복잡한 쿼리스트링)을 사용하지 않고 깔끔한 URL 사용
 # 주의: AWS S3 버킷 설정에서 '퍼블릭 액세스 차단'을 끄고, 버킷 정책을 설정해야 이미지가 보입니다.
@@ -225,9 +227,6 @@ AWS_QUERYSTRING_AUTH = False
 
 
 # 파일 저장 백엔드 설정
-# 파일을 저장할 때 어디에 저장할지를 결정합니다.
-# 파일 저장 백엔드 설정
-# 파일을 저장할 때 어디에 저장할지를 결정합니다.
 if DEBUG:
     # 개발 환경(내 컴퓨터): 내 컴퓨터의 하드디스크에 저장
     STORAGES = {
@@ -248,4 +247,10 @@ else:
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
+    
+    # 배포 시 media URL도 S3 주소로 변경
+    if AWS_S3_CUSTOM_DOMAIN:
+        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+    else:
+        MEDIA_URL = '/media/'
 

@@ -1,13 +1,42 @@
 import os
 import json
 import urllib.request
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import timezone
+from django.core.paginator import Paginator
 from .models import WeeklyReport, FinancialTransaction, SlideImage, ChurchReview
 
 def home(request):
-    # --- 1. 기존 통계 데이터 처리 ---
     today = timezone.now().date()
+
+    # IP 주소 가져오기 (Helper)
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        client_ip = x_forwarded_for.split(',')[0]
+    else:
+        client_ip = request.META.get('REMOTE_ADDR')
+
+    # 오늘 리뷰 작성 여부 확인
+    has_reviewed_today = ChurchReview.objects.filter(ip_address=client_ip, created_at__date=today).exists()
+
+    # --- 0. 리뷰 작성 처리 (POST 요청) ---
+    if request.method == 'POST':
+        author_name = request.POST.get('author_name')
+        rating = request.POST.get('rating')
+        content = request.POST.get('content')
+        
+        if author_name and content:
+            # 1일 1회 작성 제한
+            if not has_reviewed_today:
+                ChurchReview.objects.create(
+                    author_name=author_name,
+                    rating=rating,
+                    content=content,
+                    ip_address=client_ip
+                )
+            return redirect('/#review-section')
+
+    # --- 1. 기존 통계 데이터 처리 ---
     last_report = WeeklyReport.objects.filter(date__lte=today).order_by('-date').first()
     
     
@@ -35,11 +64,29 @@ def home(request):
     # --- 2. 메인 슬라이드 사진 ---
     slides = SlideImage.objects.filter(is_active=True).order_by('order')
 
-    # --- 3. 최근 재정 내역 (5개) ---
-    recent_transactions = FinancialTransaction.objects.order_by('-transaction_date')[:5]
+    # --- 3. 최근 재정 내역 (페이지네이션: 10개씩) ---
+    all_transactions = FinancialTransaction.objects.order_by('-transaction_date')
+    tx_paginator = Paginator(all_transactions, 10)
+    tx_page = request.GET.get('tx_page', 1)
+    recent_transactions = tx_paginator.get_page(tx_page)
 
-    # --- 4. 최근 리뷰 (3개) ---
-    recent_reviews = ChurchReview.objects.order_by('-created_at')[:3]
+    # [HTMX] 재정 페이지네이션 요청인 경우 부분 템플릿만 렌더링
+    if request.headers.get('HX-Request') and 'tx_page' in request.GET:
+        return render(request, 'ministry/partials/transaction_list.html', {
+            'transactions': recent_transactions
+        })
+
+    # --- 4. 최근 리뷰 (페이지네이션: 6개씩) ---
+    all_reviews = ChurchReview.objects.order_by('-created_at')
+    review_paginator = Paginator(all_reviews, 6)
+    review_page = request.GET.get('review_page', 1)
+    recent_reviews = review_paginator.get_page(review_page)
+
+    # [HTMX] 리뷰 페이지네이션 요청인 경우 부분 템플릿만 렌더링
+    if request.headers.get('HX-Request') and 'review_page' in request.GET:
+        return render(request, 'ministry/partials/review_list.html', {
+            'reviews': recent_reviews
+        })
 
     # --- 5. [업그레이드] 노션 모든 데이터 가져오기 ---
     notion_notices = []
@@ -123,4 +170,5 @@ def home(request):
         'notion_notices': notion_notices,
         'chart_labels': chart_labels,
         'chart_data': chart_data,
+        'has_reviewed_today': has_reviewed_today,
     })
