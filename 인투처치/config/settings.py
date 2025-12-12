@@ -29,7 +29,7 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 # 127.0.0.1: 내 컴퓨터 (숫자 주소)
 # localhost: 내 컴퓨터 (영어 주소)
 # [::1]: 내 컴퓨터 (IPv6 주소, 혹시 몰라 넣어둠)
-ALLOWED_HOSTS = ['intochurch.vercel.app', '127.0.0.1', 'localhost', '[::1]']
+ALLOWED_HOSTS = ['intochurch.vercel.app', '127.0.0.1', 'localhost', '[::1]', "*"]
 
 # 설치된 앱(Application) 정의
 # Django는 '앱' 단위로 기능을 쪼개서 관리합니다.
@@ -215,4 +215,5 @@ STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
+
 }
