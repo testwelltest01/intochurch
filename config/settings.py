@@ -206,13 +206,22 @@ AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = 'ap-northeast-2' # 서울 리전
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+
+if AWS_STORAGE_BUCKET_NAME:
+    # URL에 리전 정보를 포함해야 안정적으로 연결됩니다.
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
+else:
+    AWS_S3_CUSTOM_DOMAIN = None
 
 # S3 보안 및 동작 설정 (보통 그대로 둡니다)
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 AWS_S3_VERIFY = True
+
+# 서명된 URL(복잡한 쿼리스트링)을 사용하지 않고 깔끔한 URL 사용
+# 주의: AWS S3 버킷 설정에서 '퍼블릭 액세스 차단'을 끄고, 버킷 정책을 설정해야 이미지가 보입니다.
+AWS_QUERYSTRING_AUTH = False
 
 
 # 파일 저장 백엔드 설정

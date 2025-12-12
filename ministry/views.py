@@ -86,23 +86,27 @@ def home(request):
                         text_content = "".join([t['plain_text'] for t in props['텍스트']['rich_text']])
 
                     # 4. 파일과 미디어 (다운로드 링크)
-                    file_url = ""
-                    file_name = ""
+                    files = []
                     if '파일과 미디어' in props and props['파일과 미디어']['files']:
-                        file_info = props['파일과 미디어']['files'][0]
-                        file_name = file_info.get('name', '첨부파일')
-                        # 노션에 직접 올린 파일 vs 외부 링크 구분
-                        if 'file' in file_info:
-                            file_url = file_info['file']['url']
-                        elif 'external' in file_info:
-                            file_url = file_info['external']['url']
+                        for f_info in props['파일과 미디어']['files']:
+                            f_name = f_info.get('name', '첨부파일')
+                            f_url = ""
+                            if 'file' in f_info:
+                                f_url = f_info['file']['url']
+                            elif 'external' in f_info:
+                                f_url = f_info['external']['url']
+                            
+                            if f_url:
+                                files.append({
+                                    'name': f_name,
+                                    'url': f_url
+                                })
 
                     notion_notices.append({
                         'title': title,
                         'date': date_str,
-                        'text': text_content, # 추가됨
-                        'file_url': file_url, # 추가됨
-                        'file_name': file_name, # 추가됨
+                        'text': text_content,
+                        'files': files,
                         'url': page['url']
                     })
                     
