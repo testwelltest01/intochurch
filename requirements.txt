@@ -1,0 +1,13 @@
+Django
+gunicorn
+whitenoise
+psycopg2-binary
+dj-database-url
+boto3
+django-storages
+python-dotenv
+pandas
+openpyxl
+django-jazzmin
+Pillow
+notion-client

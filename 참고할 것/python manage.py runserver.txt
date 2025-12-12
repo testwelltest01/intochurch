@@ -1,0 +1,2 @@
+서버 켜고 싶다면, 터미널에서 입력할 내용:
+python manage.py runserver
