@@ -78,4 +78,4 @@ class FinancialAdmin(admin.ModelAdmin):
 # 나머지 모델 등록
 admin.site.register(WeeklyReport)
 admin.site.register(ChurchReview)
-admin.site.register(SlideImage)
+# admin.site.register(SlideImage) # 관리자 페이지에서 제거 (로컬 파일 사용)

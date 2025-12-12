@@ -221,7 +221,10 @@
     </div>
 
     <!-- Financial Section -->
-    <div id="financial-section" class="mb-20 scroll-mt-24" data-aos="fade-up">
+    <div class="mb-20 relative" data-aos="fade-up">
+        <!-- 앵커 위치 보정 (헤더 높이 고려) -->
+        <div id="financial-section" class="absolute -top+100"></div>
+
         <h2 class="text-3xl font-bold mb-8 text-slate-800 dark:text-white">💸 재정 투명성 보고</h2>
         <div id="transaction-list-container">
             {% include 'ministry/partials/transaction_list.html' %}
@@ -229,7 +232,9 @@
     </div>
 
     <!-- Review Section -->
-    <div id="review-section" class="mb-20 scroll-mt-24">
+    <div class="mb-20 relative">
+        <!-- 앵커 위치 보정 -->
+        <div id="review-section" class="absolute -top+100"></div>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
             <!-- Review Form -->
             <div class="lg:col-span-1" data-aos="fade-right">

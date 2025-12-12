@@ -47,14 +47,15 @@
 <div class="mt-12 flex justify-center space-x-2">
     {% if transactions.has_previous %}
     <button hx-get="?tx_page={{ transactions.previous_page_number }}" hx-target="#transaction-list-container"
-        hx-swap="innerHTML"
+        hx-swap="innerHTML show:#financial-section:top"
         class="px-3 py-1 rounded-md text-sm font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition">
         &laquo;
     </button>
     {% endif %}
 
     {% for i in transactions.paginator.page_range %}
-    <button hx-get="?tx_page={{ i }}" hx-target="#transaction-list-container" hx-swap="innerHTML"
+    <button hx-get="?tx_page={{ i }}" hx-target="#transaction-list-container"
+        hx-swap="innerHTML show:#financial-section:top"
         class="px-3 py-1 rounded-md text-sm font-bold {% if transactions.number == i %}bg-brand-600 text-white shadow-lg shadow-brand-500/30{% else %}bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700{% endif %} transition">
         {{ i }}
     </button>
@@ -62,7 +63,7 @@
 
     {% if transactions.has_next %}
     <button hx-get="?tx_page={{ transactions.next_page_number }}" hx-target="#transaction-list-container"
-        hx-swap="innerHTML"
+        hx-swap="innerHTML show:#financial-section:top"
         class="px-3 py-1 rounded-md text-sm font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition">
         &raquo;
     </button>

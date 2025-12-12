@@ -61,8 +61,44 @@ def home(request):
             'date': last_report.date
         }
 
-    # --- 2. 메인 슬라이드 사진 ---
-    slides = SlideImage.objects.filter(is_active=True).order_by('order')
+    # --- 2. 메인 슬라이드 사진 (로컬 파일 사용) ---
+    # slides = SlideImage.objects.filter(is_active=True).order_by('order')
+    
+    # DB 대신 media/slides 폴더의 파일들을 직접 읽어옴
+    from django.conf import settings
+    import re # 정규표현식 모듈 추가
+    slides = []
+    slides_dir = os.path.join(settings.MEDIA_ROOT, 'slides')
+    
+    # 폴더가 없으면 생성 (에러 방지)
+    if not os.path.exists(slides_dir):
+        os.makedirs(slides_dir)
+        
+    try:
+        # 폴더 내의 파일들을 가져와서 보여줄 리스트 생성
+        file_list = sorted(os.listdir(slides_dir)) # 이름순 정렬
+        for idx, filename in enumerate(file_list):
+            # 이미지 파일 확장자만 허용
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+                
+                # 파일명에서 확장자 제거
+                raw_name = os.path.splitext(filename)[0]
+                
+                # "1_제목" 또는 "01-제목" 같은 패턴에서 앞의 숫자 제거
+                # 예: "01_환영합니다" -> "환영합니다"
+                clean_title = re.sub(r'^[\d]+[_-]', '', raw_name)
+                
+                # 남은 언더바(_)는 띄어쓰기로 변경
+                # 예: "우리_교회_전경" -> "우리 교회 전경"
+                title = clean_title.replace('_', ' ')
+                
+                slides.append({
+                    'id': idx, 
+                    'title': title, # 가공된 제목 사용
+                    'image': {'url': f"{settings.MEDIA_URL}slides/{filename}"}
+                })
+    except Exception as e:
+        print(f"이미지 로드 실패: {e}")
 
     # --- 3. 최근 재정 내역 (페이지네이션: 10개씩) ---
     all_transactions = FinancialTransaction.objects.order_by('-transaction_date')

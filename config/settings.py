@@ -169,7 +169,7 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # 미디어 파일 설정 (사용자가 업로드한 파일)
 # 사용자가 올린 파일에 접근할 때 쓸 URL 주소 (예: /media/profile.jpg)
-MEDIA_URL = '/media/'
+# MEDIA_URL = '/media/'  <-- 아래 AWS 설정에서 덮어씌웁니다.
 # 실제 파일이 저장될 컴퓨터(서버) 내의 폴더 경로
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -197,49 +197,25 @@ JAZZMIN_SETTINGS = {
 }
 
 
-# AWS S3 설정 (파일 저장소)
-# 배포 환경에서는 서버 컴퓨터가 껐다 켜지면 파일이 날아갈 수 있어서,
-# AWS S3라는 외부 저장소에 파일들을 안전하게 저장합니다.
+# ==========================================
+# 파일 저장소 & URL 설정 (기본 로컬 저장소 사용)
+# ==========================================
 
-# AWS 계정 정보 (환경변수에서 비공개로 가져옴)
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_REGION_NAME = 'ap-northeast-2' # 서울 리전
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+# AWS S3를 사용하지 않고, 서버(내 컴퓨터)의 파일 시스템을 사용합니다.
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
-# S3 보안 및 동작 설정 (보통 그대로 둡니다)
-AWS_S3_SIGNATURE_VERSION = 's3v4'
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None
-AWS_S3_VERIFY = True
-
-
-# 파일 저장 백엔드 설정
-if DEBUG:
-    # 개발 환경(내 컴퓨터): 내 컴퓨터의 하드디스크에 저장
-    STORAGES = {
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
+# 배포 환경에서 WhiteNoise 사용 (정적 파일만)
+if not DEBUG:
+    STORAGES['staticfiles'] = {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     }
-else:
-    # 배포 환경(실제 서비스): AWS S3 클라우드에 저장
-    STORAGES = {
-        "default": {
-            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-        },
-        "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-        },
-    }
-    
-    # 배포 시 media URL도 S3 주소로 변경
-    if AWS_S3_CUSTOM_DOMAIN:
-        MEDIA_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
-    else:
-        MEDIA_URL = '/media/'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
