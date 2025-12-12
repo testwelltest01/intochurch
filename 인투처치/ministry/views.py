@@ -10,6 +10,19 @@ def home(request):
     today = timezone.now().date()
     last_report = WeeklyReport.objects.filter(date__lte=today).order_by('-date').first()
     
+    
+    # --- 1-1. 차트용 최근 4주 데이터 ---
+    recent_reports = WeeklyReport.objects.filter(date__lte=today).order_by('-date')[:4]
+    # 차트는 왼쪽(과거) -> 오른쪽(최신)으로 그려져야 하므로 뒤집습니다.
+    recent_reports_reversed = reversed(list(recent_reports))
+    
+    chart_labels = []
+    chart_data = []
+    
+    for r in recent_reports_reversed:
+        chart_labels.append(r.date.strftime('%m/%d')) # 예: 12/07
+        chart_data.append(r.worship_attendance)
+
     stat = None
     if last_report:
         stat = {
@@ -104,4 +117,6 @@ def home(request):
         'transactions': recent_transactions,
         'reviews': recent_reviews,
         'notion_notices': notion_notices,
+        'chart_labels': chart_labels,
+        'chart_data': chart_data,
     })

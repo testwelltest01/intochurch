@@ -15,8 +15,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # 개발 모드 설정 (중요!)
 # SECURITY WARNING: 실제 배포할 때는 비밀키를 절대 노출하면 안 됩니다.
-# .env 파일에서 SECRET_KEY를 가져옵니다.
-SECRET_KEY = os.environ.get('SECRET_KEY')
+# .env 파일에서 SECRET_KEY를 가져오되, 없으면 기본값을 사용합니다(개발 환경용).
+env_path = BASE_DIR / '.env'
+if env_path.exists():
+    from dotenv import load_dotenv
+    load_dotenv(env_path)
+
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-for-dev-only-12345')
 
 # 디버그 모드 설정
 # True면 에러 발생 시 상세한 에러 페이지를 보여줍니다 (개발할 때 좋음).
@@ -151,7 +156,13 @@ USE_TZ = False
 # CSS, JavaScript, 이미지 파일들을 어떻게 관리할지 설정합니다.
 
 # HTML에서 정적 파일을 불러올 때 쓸 주소 (예: /static/css/style.css)
+# HTML에서 정적 파일을 불러올 때 쓸 주소 (예: /static/css/style.css)
 STATIC_URL = 'static/'
+
+# 프로젝트 루트의 static 폴더를 정적 파일 경로로 추가 (Tailwind CSS 등)
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # python manage.py collectstatic 명령을 치면 흩어져 있는 정적 파일들이 모이는 곳
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -206,14 +217,26 @@ AWS_S3_VERIFY = True
 
 # 파일 저장 백엔드 설정
 # 파일을 저장할 때 어디에 저장할지를 결정합니다.
-STORAGES = {
-    # 기본 파일 저장소 (media 파일 등) -> S3 사용
-    "default": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
-    },
-    # 정적 파일 저장소 (CSS, JS 등) -> Whitenoise 사용 (배포 시 효율적)
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
+# 파일 저장 백엔드 설정
+# 파일을 저장할 때 어디에 저장할지를 결정합니다.
+if DEBUG:
+    # 개발 환경(내 컴퓨터): 내 컴퓨터의 하드디스크에 저장
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    # 배포 환경(실제 서비스): AWS S3 클라우드에 저장
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        },
+    }
 
-}

@@ -1,442 +1,490 @@
-<!DOCTYPE html>
-<html lang="ko">
+{% extends 'base.html' %}
+{% load static %}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>투명한 사역 교회</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Noto Sans KR', sans-serif;
-        }
-    </style>
-</head>
+{% block content %}
+<!-- Hero Slider -->
+{% if slides %}
+<div id="hero-slider" class="relative w-full h-[80vh] overflow-hidden bg-slate-900 group">
+    {% for slide in slides %}
+    <div
+        class="slide-item absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out {% if not forloop.first %}opacity-0 z-0{% else %}opacity-100 z-10{% endif %}">
+        <img src="{{ slide.image.url }}"
+            class="w-full h-full object-cover opacity-70 group-hover:scale-105 transition-transform duration-[3000ms]"
+            alt="{{ slide.title }}">
 
-<body class="bg-gray-100 font-sans leading-normal tracking-normal">
-
-    <nav class="bg-white shadow p-4 relative z-50">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold text-gray-800">🕊️ 투명한 사역 교회</h1>
-            <a href="/admin" class="text-sm text-gray-500 hover:text-blue-500">관리자 로그인</a>
-        </div>
-    </nav>
-
-    {% if slides %}
-    <div id="hero-slider" class="relative w-full h-[60vh] md:h-[80vh] overflow-hidden bg-gray-900">
-
-        {% for slide in slides %}
-        <div
-            class="slide-item absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out {% if not forloop.first %}opacity-0{% endif %}">
-            <img src="{{ slide.image.url }}" class="w-full h-full object-cover opacity-90" alt="{{ slide.title }}">
-            <div class="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
-                <h2
-                    class="text-white text-4xl md:text-6xl font-bold drop-shadow-lg opacity-0 transform translate-y-10 transition duration-1000 slide-text">
-                    {{ slide.title }}
-                </h2>
+        <!-- Live Badge -->
+        <div class="absolute top-8 right-8 z-30" x-data="{ isLive: false }"
+            x-init="const now = new Date(); if(now.getDay()===0 && now.getHours()>=11 && now.getHours()<=13) isLive=true;">
+            <div x-show="isLive"
+                class="flex items-center space-x-2 bg-red-600/90 text-white px-4 py-2 rounded-full backdrop-blur shadow-lg animate-pulse"
+                x-transition>
+                <span class="relative flex h-3 w-3">
+                    <span
+                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-white"></span>
+                </span>
+                <span class="font-bold text-sm tracking-widest uppercase">Live Worship</span>
             </div>
         </div>
+
+        <div
+            class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent flex items-center justify-center">
+            <div class="text-center px-4">
+                <h2
+                    class="slide-text text-white text-5xl md:text-7xl font-bold drop-shadow-2xl opacity-0 transform translate-y-10 transition duration-1000 leading-tight">
+                    {{ slide.title }}
+                </h2>
+                <p
+                    class="mt-4 text-xl text-slate-200 opacity-0 transform translate-y-10 transition duration-1000 delay-200 slide-sub">
+                    투명함이 신뢰를 만듭니다
+                </p>
+                <div class="mt-10 opacity-0 transform translate-y-10 transition duration-1000 delay-500 slide-cta">
+                    <a href="#about"
+                        class="px-8 py-3 bg-brand-600 hover:bg-brand-500 text-white rounded-full font-bold text-lg shadow-lg hover:shadow-brand-500/30 transition shadow-brand-500/20 ring-1 ring-white/20">
+                        함께하기
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Navigation Buttons -->
+    <button onclick="changeSlide(-1)"
+        class="absolute left-8 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-4 rounded-full z-20 transition border border-white/10">❮</button>
+    <button onclick="changeSlide(1)"
+        class="absolute right-8 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-4 rounded-full z-20 transition border border-white/10">❯</button>
+
+    <!-- Indicators -->
+    <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex space-x-4 z-20">
+        {% for slide in slides %}
+        <button onclick="goToSlide({{ forloop.counter0 }})"
+            class="indicator w-12 h-1 rounded-full bg-white/30 hover:bg-white transition"></button>
         {% endfor %}
+    </div>
+</div>
+{% endif %}
 
-        <button onclick="changeSlide(-1)"
-            class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full z-10">❮</button>
-        <button onclick="changeSlide(1)"
-            class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-3 rounded-full z-10">❯</button>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-30">
+    <!-- Stats Cards & Charts -->
+    {% if stat %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20" data-aos="fade-up">
+        <!-- Stat Cards -->
+        <div
+            class="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-2xl shadow-xl p-8 border border-white/20 dark:border-slate-700 hover:transform hover:-translate-y-2 transition duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <p class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-sm">Last Worship
+                </p>
+                <span class="text-2xl">👥</span>
+            </div>
+            <p class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+                {{stat.worship_attendance }}<span class="text-xl text-slate-500 ml-1">명</span></p>
+            <p class="text-xs text-slate-400 mt-2 font-mono">{{ stat.date }} 기준</p>
+        </div>
 
-        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex space-x-3 z-10">
-            {% for slide in slides %}
-            <button onclick="goToSlide({{ forloop.counter0 }})"
-                class="indicator w-3 h-3 rounded-full bg-white/50 hover:bg-white transition"></button>
+        <div
+            class="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-2xl shadow-xl p-8 border border-white/20 dark:border-slate-700 hover:transform hover:-translate-y-2 transition duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <p class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-sm">New Comers</p>
+                <span class="text-2xl">🌱</span>
+            </div>
+            <p class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-green-500 to-emerald-600">
+                {{ stat.new_comers }}<span class="text-xl text-slate-500 ml-1">명</span></p>
+        </div>
+
+        <div
+            class="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-2xl shadow-xl p-8 border border-white/20 dark:border-slate-700 hover:transform hover:-translate-y-2 transition duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <p class="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-sm">Offering</p>
+                <span class="text-2xl">🙏</span>
+            </div>
+            <p class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-yellow-500 to-orange-500">
+                {{ stat.offering_total }}<span class="text-sm text-slate-500 ml-1">원</span></p>
+        </div>
+
+        <!-- Mini Chart Card -->
+        <div
+            class="bg-white/90 dark:bg-slate-800/90 backdrop-blur rounded-2xl shadow-xl p-4 border border-white/20 dark:border-slate-700 flex flex-col justify-center">
+            <canvas id="miniAttendanceChart" height="100"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Story Section: Why Transparency? -->
+    <div id="about" class="mb-24 py-12" data-aos="fade-up">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-slate-900 dark:text-white mb-4">왜 '투명한 사역'인가요?</h2>
+            <p class="text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+                우리는 교회가 세상 속에서 다시 신뢰를 회복하는 방법이<br>
+                <span class="text-brand-600 dark:text-brand-400 font-bold">솔직함</span>과 <span
+                    class="text-brand-600 dark:text-brand-400 font-bold">투명함</span>에 있다고 믿습니다.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Card 1 -->
+            <div
+                class="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-lg border border-slate-100 dark:border-slate-700 text-center hover:border-brand-500 transition duration-300 group">
+                <div
+                    class="w-16 h-16 mx-auto bg-brand-100 dark:bg-slate-700 text-brand-600 rounded-full flex items-center justify-center text-3xl mb-6 group-hover:bg-brand-600 group-hover:text-white transition">
+                    👁️
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">재정의 투명성</h3>
+                <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
+                    모든 헌금의 내역과 사용처를<br>
+                    1원 단위까지 실시간으로 공개합니다.
+                </p>
+            </div>
+            <!-- Card 2 -->
+            <div
+                class="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-lg border border-slate-100 dark:border-slate-700 text-center hover:border-brand-500 transition duration-300 group">
+                <div
+                    class="w-16 h-16 mx-auto bg-blue-100 dark:bg-slate-700 text-blue-600 rounded-full flex items-center justify-center text-3xl mb-6 group-hover:bg-blue-600 group-hover:text-white transition">
+                    💬
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">소통의 투명성</h3>
+                <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
+                    성도님들의 리뷰와 의견을<br>
+                    가감 없이 듣고 반영합니다.
+                </p>
+            </div>
+            <!-- Card 3 -->
+            <div
+                class="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-lg border border-slate-100 dark:border-slate-700 text-center hover:border-brand-500 transition duration-300 group">
+                <div
+                    class="w-16 h-16 mx-auto bg-green-100 dark:bg-slate-700 text-green-600 rounded-full flex items-center justify-center text-3xl mb-6 group-hover:bg-green-600 group-hover:text-white transition">
+                    🤝
+                </div>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">사역의 투명성</h3>
+                <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
+                    어떤 마음으로 사역하는지<br>
+                    매주 보고서로 공유합니다.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notion Notices -->
+    <div class="mb-20" data-aos="fade-up" data-aos-delay="100">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="text-3xl font-bold text-slate-800 dark:text-white flex items-center">
+                <span class="bg-brand-100 text-brand-600 p-2 rounded-lg mr-3 text-2xl">📢</span>
+                교회 소식
+            </h2>
+            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-xs font-mono">Synced
+                with Notion</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {% for notice in notion_notices %}
+            <a href="{{ notice.url }}" target="_blank" class="block group">
+                <div
+                    class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-sm hover:shadow-xl transition border border-slate-100 dark:border-slate-700 group-hover:border-brand-200 dark:group-hover:border-brand-800 h-full flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span
+                                class="px-2 py-1 bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-400 text-xs font-bold rounded uppercase">Notice</span>
+                            <span class="text-slate-400 text-sm">{{ notice.date }}</span>
+                        </div>
+                        <h3
+                            class="text-xl font-bold text-slate-800 dark:text-slate-200 group-hover:text-brand-600 transition mb-3">
+                            {{ notice.title }}
+                        </h3>
+                        {% if notice.text %}
+                        <p class="text-slate-600 dark:text-slate-400 text-sm line-clamp-2">
+                            {{ notice.text }}
+                        </p>
+                        {% endif %}
+                    </div>
+                    <div
+                        class="mt-6 flex items-center text-brand-500 text-sm font-bold opacity-0 group-hover:opacity-100 transform translate-x-[-10px] group-hover:translate-x-0 transition">
+                        자세히 보기 <span class="ml-1">→</span>
+                    </div>
+                </div>
+            </a>
+            {% empty %}
+            <div
+                class="col-span-2 text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+                <p class="text-slate-500">등록된 소식이 없습니다.</p>
+            </div>
             {% endfor %}
         </div>
     </div>
 
-    <script>
+    <!-- Financial Section -->
+    <div id="financial-section" class="mb-20 scroll-mt-24" data-aos="fade-up">
+        <h2 class="text-3xl font-bold mb-8 text-slate-800 dark:text-white">💸 재정 투명성 보고</h2>
+        <div
+            class="bg-white dark:bg-slate-800 shadow-lg rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Description
+                            </th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">
+                                Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                        {% for tx in transactions %}
+                        <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
+                            <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-mono">
+                                {{tx.transaction_date|date:"Y.m.d" }}</td>
+                            <td class="px-6 py-4">
+                                <span
+                                    class="px-2 py-1 text-xs font-bold rounded-full {% if tx.type == 'IN' %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400{% else %}bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400{% endif %}">
+                                    {{ tx.get_type_display }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-slate-900 dark:text-white font-medium">{{ tx.description }}</div>
+                                <div class="text-xs text-slate-400">{{ tx.category }}</div>
+                            </td>
+                            <td
+                                class="px-6 py-4 text-right text-sm font-mono font-bold {% if tx.type == 'IN' %}text-green-600 dark:text-green-400{% else %}text-rose-600 dark:text-rose-400{% endif %}">
+                                {% if tx.type == 'OUT' %}-{% endif %}{{ tx.amount }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="p-8 text-center text-slate-500">데이터가 없습니다.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Pagination (simplified) -->
+        {% if transactions.has_other_pages %}
+        <div class="mt-6 flex justify-center space-x-2">
+            {% for i in transactions.paginator.page_range %}
+            <a href="?tx_page={{ i }}#financial-section"
+                class="px-3 py-1 rounded-md text-sm font-bold {% if transactions.number == i %}bg-brand-600 text-white shadow-lg shadow-brand-500/30{% else %}bg-white text-slate-600 hover:bg-slate-100{% endif %} transition">
+                {{ i }}
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Review Section -->
+    <div id="review-section" class="mb-20 scroll-mt-24">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <!-- Review Form -->
+            <div class="lg:col-span-1" data-aos="fade-right">
+                <div class="sticky top-24">
+                    <h3 class="text-2xl font-bold text-slate-800 dark:text-white mb-4">🗣️ 목소리를 들려주세요</h3>
+                    <p class="text-slate-500 dark:text-slate-400 mb-8">투명한 교회는 성도님들의 솔직한 의견으로 성장합니다.</p>
+
+                    <div
+                        class="bg-gradient-to-br from-brand-50 to-white dark:from-slate-800 dark:to-slate-800 rounded-2xl p-6 shadow-lg border border-brand-100 dark:border-slate-700">
+                        <form method="POST" action="#review-section" class="space-y-4">
+                            {% csrf_token %}
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Name</label>
+                                <input type="text" name="author_name"
+                                    class="w-full px-4 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+                                    placeholder="이름 (익명 가능)" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Rating</label>
+                                <div class="flex space-x-2 cursor-pointer" id="star-container">
+                                    <span class="text-3xl text-yellow-400 star-btn hover:scale-110 transition"
+                                        data-value="1">★</span>
+                                    <span class="text-3xl text-yellow-400 star-btn hover:scale-110 transition"
+                                        data-value="2">★</span>
+                                    <span class="text-3xl text-yellow-400 star-btn hover:scale-110 transition"
+                                        data-value="3">★</span>
+                                    <span class="text-3xl text-yellow-400 star-btn hover:scale-110 transition"
+                                        data-value="4">★</span>
+                                    <span class="text-3xl text-yellow-400 star-btn hover:scale-110 transition"
+                                        data-value="5">★</span>
+                                </div>
+                                <input type="hidden" name="rating" id="rating-input" value="5">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Message</label>
+                                <textarea name="content" rows="4"
+                                    class="w-full px-4 py-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition"
+                                    placeholder="의견을 자유롭게 적어주세요." required></textarea>
+                            </div>
+                            <button type="submit"
+                                class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">
+                                리뷰 등록하기
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review Grid -->
+            <div class="lg:col-span-2" data-aos="fade-left">
+                <div class="group-review-grid gap-4 columns-1 md:columns-2 space-y-4">
+                    {% for review in reviews %}
+                    <div
+                        class="break-inside-avoid bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 hover:shadow-md transition">
+                        <div class="flex items-center mb-4">
+                            <div
+                                class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-400 to-accent-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                                {{ review.author_name|slice:":1" }}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-bold text-slate-900 dark:text-white">{{ review.author_name }}</p>
+                                <div class="flex text-yellow-400 text-xs">
+                                    {% if review.rating >= 1 %}★{% else %}☆{% endif %}
+                                    {% if review.rating >= 2 %}★{% else %}☆{% endif %}
+                                    {% if review.rating >= 3 %}★{% else %}☆{% endif %}
+                                    {% if review.rating >= 4 %}★{% else %}☆{% endif %}
+                                    {% if review.rating >= 5 %}★{% else %}☆{% endif %}
+                                </div>
+                            </div>
+                            <span class="ml-auto text-xs text-slate-400">{{ review.created_at|date:"Y.m.d" }}</span>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-sm">
+                            {{ review.content }}
+                        </p>
+                    </div>
+                    {% empty %}
+                    <div class="bg-slate-50 p-8 rounded text-center col-span-2">아직 리뷰가 없습니다. 첫 리뷰를 남겨주세요!</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Youtube & Map -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-20" data-aos="fade-up">
+        <div>
+            <h2 class="text-2xl font-bold mb-6 text-slate-800 dark:text-white">🎬 이번 주 찬양</h2>
+            <div
+                class="aspect-w-16 aspect-h-9 rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white dark:ring-slate-700">
+                <iframe class="w-full h-full" src="https://www.youtube.com/embed/65Eza7cI_V8" frameborder="0"
+                    allowfullscreen></iframe>
+            </div>
+        </div>
+        <div>
+            <h2 class="text-2xl font-bold mb-6 text-slate-800 dark:text-white">📍 찾아오시는 길</h2>
+            <div
+                class="rounded-2xl overflow-hidden shadow-2xl ring-4 ring-white dark:ring-slate-700 h-64 md:h-full relative">
+                <div id="map" class="w-full h-full bg-gray-200"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Onboarding Modal Removed temporarily due to UI blocking issue -->
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=nm5q0b1hyn"></script>
+<script>
+    // Slider Logic
+    document.addEventListener("DOMContentLoaded", function () {
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide-item');
         const texts = document.querySelectorAll('.slide-text');
+        const subs = document.querySelectorAll('.slide-sub');
+        const ctas = document.querySelectorAll('.slide-cta');
         const indicators = document.querySelectorAll('.indicator');
         const totalSlides = slides.length;
 
+        if (totalSlides === 0) return;
+
         function updateSlide() {
             slides.forEach((slide, index) => {
-                slide.classList.toggle('opacity-0', index !== currentSlide);
-                slide.classList.toggle('z-10', index === currentSlide);
-                if (index === currentSlide) {
-                    setTimeout(() => { if (texts[index]) texts[index].classList.remove('opacity-0', 'translate-y-10'); }, 300);
+                const isActive = index === currentSlide;
+                slide.classList.toggle('opacity-0', !isActive);
+                slide.classList.toggle('z-0', !isActive);
+                slide.classList.toggle('opacity-100', isActive);
+                slide.classList.toggle('z-10', isActive);
+
+                if (isActive) {
+                    setTimeout(() => { if (texts[index]) texts[index].classList.remove('opacity-0', 'translate-y-10'); }, 100);
+                    setTimeout(() => { if (subs[index]) subs[index].classList.remove('opacity-0', 'translate-y-10'); }, 300);
+                    setTimeout(() => { if (ctas[index]) ctas[index].classList.remove('opacity-0', 'translate-y-10'); }, 500);
                 } else {
                     if (texts[index]) texts[index].classList.add('opacity-0', 'translate-y-10');
+                    if (subs[index]) subs[index].classList.add('opacity-0', 'translate-y-10');
+                    if (ctas[index]) ctas[index].classList.add('opacity-0', 'translate-y-10');
                 }
             });
             indicators.forEach((dot, index) => {
                 dot.classList.toggle('bg-white', index === currentSlide);
-                dot.classList.toggle('bg-white/50', index !== currentSlide);
+                dot.classList.toggle('bg-white/30', index !== currentSlide);
+                dot.classList.toggle('w-12', index === currentSlide); // Active width
+                dot.classList.toggle('w-3', index !== currentSlide);  // Inactive width
             });
         }
-        function changeSlide(direction) { currentSlide = (currentSlide + direction + totalSlides) % totalSlides; updateSlide(); }
-        function goToSlide(index) { currentSlide = index; updateSlide(); }
-        if (totalSlides > 0) { updateSlide(); setInterval(() => changeSlide(1), 5000); }
-    </script>
-    {% endif %}
+        window.changeSlide = function (direction) { currentSlide = (currentSlide + direction + totalSlides) % totalSlides; updateSlide(); }
+        window.goToSlide = function (index) { currentSlide = index; updateSlide(); }
+        updateSlide();
+        setInterval(() => changeSlide(1), 8000);
 
-    <div class="max-w-6xl mx-auto p-6 mt-8">
-
-        <h2 class="text-2xl font-bold mb-4 text-gray-700">📊 지난주 사역 현황</h2>
-        {% if stat %}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-            <div class="bg-white border-l-4 border-blue-500 shadow rounded-lg p-6">
-                <p class="text-gray-500 font-bold">예배 인원</p>
-                <p class="text-4xl font-bold text-gray-800">{{ stat.worship_attendance }}명</p>
-                <p class="text-xs text-gray-400 mt-2">{{ stat.date }} 기준</p>
-            </div>
-            <div class="bg-white border-l-4 border-green-500 shadow rounded-lg p-6">
-                <p class="text-gray-500 font-bold">새가족</p>
-                <p class="text-4xl font-bold text-gray-800">{{ stat.new_comers }}명</p>
-            </div>
-            <div class="bg-white border-l-4 border-yellow-500 shadow rounded-lg p-6">
-                <p class="text-gray-500 font-bold">주간 헌금</p>
-                <p class="text-4xl font-bold text-gray-800">{{ stat.offering_total }}원</p>
-            </div>
-        </div>
-        {% else %}
-        <div class="bg-yellow-50 border border-yellow-200 p-4 rounded text-yellow-700 mb-10">아직 등록된 사역 데이터가 없습니다.</div>
-        {% endif %}
-
-        <div class="max-w-6xl mx-auto p-6 mt-8">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold text-gray-700">📢 교회 소식 (Notion)</h2>
-                <span class="text-xs text-gray-500">노션 연동 중</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {% for notice in notion_notices %}
-                <div class="bg-white shadow rounded-lg p-6 border border-gray-100 hover:shadow-md transition">
-                    <div class="flex justify-between items-start mb-2">
-                        <a href="{{ notice.url }}" target="_blank"
-                            class="text-lg font-bold text-gray-800 hover:text-blue-600">
-                            {{ notice.title }}
-                        </a>
-                        <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">{{ notice.date }}</span>
-                    </div>
-
-                    {% if notice.text %}
-                    <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-                        {{ notice.text }}
-                    </p>
-                    {% endif %}
-
-                    {% if notice.file_url %}
-                    <a href="{{ notice.file_url }}"
-                        class="inline-flex items-center text-sm text-blue-500 hover:underline mt-2">
-                        📎 {{ notice.file_name }} 다운로드
-                    </a>
-                    {% endif %}
-                </div>
-                {% empty %}
-                <div class="col-span-2 bg-gray-50 p-6 text-center text-gray-500 rounded-lg">
-                    아직 등록된 소식이 없습니다.
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        <br><br>
-
-        <h2 class="text-2xl font-bold mb-4 text-gray-700" id="financial-section">💸 재정 입출금 내역 (Real-time)</h2>
-        <div class="bg-white shadow rounded-lg overflow-hidden overflow-x-auto mb-4">
-            <table class="min-w-full leading-normal">
-                <thead>
-                    <tr>
-                        <th
-                            class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            날짜</th>
-                        <th
-                            class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            구분</th>
-                        <th
-                            class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            내역</th>
-                        <th
-                            class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            금액</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for tx in transactions %}
-                    <tr>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            {{ tx.transaction_date|date:"Y-m-d" }}</td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <span
-                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if tx.type == 'IN' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
-                                {{ tx.get_type_display }}
-                            </span>
-                        </td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                            <p class="text-gray-900 font-bold">{{ tx.description }}</p>
-                            <p class="text-gray-500 text-xs">{{ tx.category }}</p>
-                        </td>
-                        <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-right font-mono">
-                            {% if tx.type == 'OUT' %}- {% endif %}{{ tx.amount }}원
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="4" class="px-5 py-5 text-center text-gray-500">내역이 없습니다.</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        {% if transactions.has_other_pages %}
-        <div class="flex justify-center items-center space-x-2 mb-12">
-            {% if transactions.has_previous %}
-            <a href="?tx_page={{ transactions.previous_page_number }}#financial-section"
-                class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-gray-600">&laquo; 이전</a>
-            {% endif %}
-
-            {% for i in transactions.paginator.page_range %}
-            {% if transactions.number == i %}
-            <span class="px-3 py-1 bg-green-600 text-white border border-green-600 rounded font-bold">{{ i }}</span>
-            {% else %}
-            <a href="?tx_page={{ i }}#financial-section"
-                class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-gray-600">{{ i }}</a>
-            {% endif %}
-            {% endfor %}
-
-            {% if transactions.has_next %}
-            <a href="?tx_page={{ transactions.next_page_number }}#financial-section"
-                class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-gray-600">다음 &raquo;</a>
-            {% endif %}
-        </div>
-        {% endif %}
-
-        <h2 class="text-2xl font-bold mb-4 text-gray-700" id="review-section">🗣️ 성도 리뷰</h2>
-
-        {% if messages %}
-        <div class="mb-4">
-            {% for message in messages %}
-            <div
-                class="p-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-700{% else %}bg-green-100 text-green-700{% endif %}">
-                {{ message }}
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <div class="bg-blue-50 p-6 rounded-lg border border-blue-100 mb-8">
-            <h3 class="font-bold text-gray-800 mb-2">교회에 바라는 점을 남겨주세요</h3>
-            <p class="text-sm text-gray-500 mb-4">여러분의 목소리가 투명한 교회를 만듭니다. (1일 1회 작성 가능)</p>
-            <form method="POST" action="#review-section">
-                {% csrf_token %}
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div class="md:col-span-1">
-                        <input type="text" name="author_name" placeholder="이름 (또는 익명)"
-                            class="w-full p-3 rounded border border-gray-300 focus:outline-none focus:border-blue-500"
-                            required>
-                    </div>
-                    <div class="md:col-span-3 flex items-center space-x-4">
-                        <div class="flex space-x-1 cursor-pointer" id="star-container">
-                            <span class="text-2xl text-yellow-400 star-btn" data-value="1">★</span>
-                            <span class="text-2xl text-yellow-400 star-btn" data-value="2">★</span>
-                            <span class="text-2xl text-yellow-400 star-btn" data-value="3">★</span>
-                            <span class="text-2xl text-yellow-400 star-btn" data-value="4">★</span>
-                            <span class="text-2xl text-yellow-400 star-btn" data-value="5">★</span>
-                        </div>
-                        <span class="text-sm text-gray-600 font-bold"><span id="rating-display">5</span>점</span>
-                        <input type="hidden" name="rating" id="rating-input" value="5">
-                    </div>
-                    <div class="md:col-span-4">
-                        <textarea name="content" rows="3" placeholder="솔직한 의견을 적어주세요."
-                            class="w-full p-3 rounded border border-gray-300 focus:outline-none focus:border-blue-500"
-                            required></textarea>
-                    </div>
-                    <div class="md:col-span-4 text-right">
-                        <button type="submit"
-                            class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition font-bold">리뷰
-                            등록하기</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-        <script>
-            const stars = document.querySelectorAll('.star-btn');
-            const ratingInput = document.getElementById('rating-input');
-            const ratingDisplay = document.getElementById('rating-display');
-            stars.forEach(star => {
-                star.addEventListener('click', function () {
-                    const value = this.getAttribute('data-value');
-                    ratingInput.value = value;
-                    ratingDisplay.innerText = value;
-                    stars.forEach(s => {
-                        if (s.getAttribute('data-value') <= value) {
-                            s.classList.remove('text-gray-300'); s.classList.add('text-yellow-400');
-                        } else {
-                            s.classList.add('text-gray-300'); s.classList.remove('text-yellow-400');
-                        }
-                    });
-                });
-            });
-        </script>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {% for review in reviews %}
-            <div class="bg-white p-6 rounded-lg shadow border border-gray-200">
-                <div class="flex justify-between items-start mb-2">
-                    <div class="flex items-center">
-                        <div
-                            class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500 mr-2">
-                            {{ review.author_name|slice:":1" }}
-                        </div>
-                        <span class="font-bold text-gray-900">{{ review.author_name }}</span>
-                    </div>
-                    <span class="text-xs text-gray-400">{{ review.created_at|date:"Y.m.d" }}</span>
-                </div>
-                <div class="mb-2 text-yellow-400 text-sm">
-                    {% if review.rating >= 1 %}★{% else %}☆{% endif %}
-                    {% if review.rating >= 2 %}★{% else %}☆{% endif %}
-                    {% if review.rating >= 3 %}★{% else %}☆{% endif %}
-                    {% if review.rating >= 4 %}★{% else %}☆{% endif %}
-                    {% if review.rating >= 5 %}★{% else %}☆{% endif %}
-                </div>
-                <p class="text-gray-700 break-words">{{ review.content }}</p>
-            </div>
-            {% empty %}
-            <p class="text-gray-500 col-span-2 text-center">등록된 리뷰가 없습니다.</p>
-            {% endfor %}
-        </div>
-
-        {% if reviews.has_other_pages %}
-        <div class="flex justify-center items-center space-x-2 mb-10">
-            {% if reviews.has_previous %}
-            <a href="?review_page={{ reviews.previous_page_number }}#review-section"
-                class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-gray-600">&laquo; 이전</a>
-            {% endif %}
-
-            {% for i in reviews.paginator.page_range %}
-            {% if reviews.number == i %}
-            <span class="px-3 py-1 bg-blue-600 text-white border border-blue-600 rounded font-bold">{{ i }}</span>
-            {% else %}
-            <a href="?review_page={{ i }}#review-section"
-                class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-gray-600">{{ i }}</a>
-            {% endif %}
-            {% endfor %}
-
-            {% if reviews.has_next %}
-            <a href="?review_page={{ reviews.next_page_number }}#review-section"
-                class="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-gray-100 text-gray-600">다음 &raquo;</a>
-            {% endif %}
-        </div>
-        {% endif %}
-
-    </div>
-
-    <div class="max-w-6xl mx-auto p-6 mt-8">
-        <h2 class="text-2xl font-bold mb-4 text-gray-700">🎬 이주의 추천 찬양</h2>
-        <div class="bg-white p-2 rounded-lg shadow border border-gray-200">
-            <div class="relative w-full" style="padding-bottom: 56.25%;">
-                <iframe class="absolute top-0 left-0 w-full h-full rounded-lg"
-                    src="https://www.youtube.com/embed/65Eza7cI_V8" title="YouTube video player" frameborder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
-                </iframe>
-            </div>
-        </div>
-    </div>
-
-    <div class="max-w-6xl mx-auto p-6 mt-8 mb-12">
-        <h2 class="text-2xl font-bold mb-4 text-gray-700">📍 오시는 길</h2>
-
-        <div class="bg-white p-2 rounded-lg shadow border border-gray-200">
-            <div id="map" class="w-full h-96 rounded-lg bg-gray-100 relative focus:outline-none">
-                <div class="absolute inset-0 flex items-center justify-center text-gray-400">
-                    지도를 불러오는 중입니다...
-                </div>
-            </div>
-        </div>
-
-        <div class="mt-4 flex flex-col md:flex-row justify-between items-start md:items-center text-gray-600">
-            <div>
-                <p class="font-bold text-lg text-gray-800">판교역 2km 반경 카페 (임시 예배처)</p>
-                <p class="text-sm">경기 성남시 분당구 판교역로 160 (판교역)</p>
-            </div>
-            <a href="https://map.naver.com/v5/search/판교역" target="_blank"
-                class="mt-2 md:mt-0 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition font-bold text-sm">
-                네이버 지도로 보기 →
-            </a>
-        </div>
-    </div>
-
-    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=nm5q0b1hyn"></script>
-
-    <script>
-        // 지도가 로드된 후 실행
-        document.addEventListener("DOMContentLoaded", function () {
-            // 1. 판교역 좌표 (위도, 경도)
-            var pangyoStation = new naver.maps.LatLng(37.394776, 127.11116);
-
-            // 2. 지도 옵션 설정
-            var mapOptions = {
-                center: pangyoStation, // 지도의 중심을 판교역으로
-                zoom: 15,              // 확대 레벨 (클수록 확대됨)
-                scaleControl: false,
-                logoControl: false,
-                mapDataControl: false,
-                zoomControl: true,
-                minZoom: 10
-            };
-
-            // 3. 지도 생성 ('map'이라는 아이디를 가진 div에 그림)
-            try {
-                var map = new naver.maps.Map('map', mapOptions);
-
-                // 4. 마커(핀) 찍기
-                var marker = new naver.maps.Marker({
-                    position: pangyoStation,
-                    map: map,
-                    title: "판교역 (우리 교회)"
-                });
-
-                // 5. 마커 클릭 시 정보창 띄우기 (선택사항)
-                var contentString = [
-                    '<div style="padding:10px;min-width:200px;line-height:150%;">',
-                    '<h4 style="margin-top:5px;">🕊️ 투명한 사역 교회</h4>',
-                    '<p>판교역 1번 출구 앞<br />매주 일요일 오전 11시</p>',
-                    '</div>'
-                ].join('');
-
-                var infowindow = new naver.maps.InfoWindow({
-                    content: contentString,
-                    borderColor: "#3b82f6",
-                    borderWidth: 2,
-                    anchorSize: new naver.maps.Size(10, 10)
-                });
-
-                naver.maps.Event.addListener(marker, "click", function (e) {
-                    if (infowindow.getMap()) {
-                        infowindow.close();
+        // Review Stars Logic
+        const stars = document.querySelectorAll('.star-btn');
+        const ratingInput = document.getElementById('rating-input');
+        stars.forEach(star => {
+            star.addEventListener('click', function () {
+                const value = this.getAttribute('data-value');
+                ratingInput.value = value;
+                stars.forEach(s => {
+                    const sVal = s.getAttribute('data-value');
+                    if (sVal <= value) {
+                        s.classList.remove('text-gray-300'); s.classList.add('text-yellow-400');
                     } else {
-                        infowindow.open(map, marker);
+                        s.classList.add('text-gray-300'); s.classList.remove('text-yellow-400');
                     }
                 });
-            } catch (e) {
-                console.error("네이버 지도 로드 실패 (Client ID를 확인하세요)");
-                document.getElementById('map').innerHTML = `
-                    <div class='flex flex-col items-center justify-center h-full text-gray-500'>
-                        <p class='font-bold mb-2'>⚠️ 지도를 불러올 수 없습니다.</p>
-                        <p class='text-sm'>네이버 클라우드 플랫폼에서 Client ID를 발급받아 코드에 넣어주세요.</p>
-                    </div>
-                `;
-            }
+            });
         });
-    </script>
 
-    <footer class="bg-gray-800 text-white text-center p-8 mt-10">
-        <p>&copy; 2025 투명한 사역 교회</p>
-    </footer>
+        // Map Logic
+        var pangyoStation = new naver.maps.LatLng(37.394776, 127.11116);
+        var map = new naver.maps.Map('map', { center: pangyoStation, zoom: 15 });
+        new naver.maps.Marker({ position: pangyoStation, map: map, title: "투명한 사역 교회" });
 
-</body>
+        // Chart Logic (Mock Data for now or use stat data if available in JS context)
+        const ctx = document.getElementById('miniAttendanceChart');
+        const chartLabels = JSON.parse(document.getElementById('chart-labels-data').textContent);
+        const chartData = JSON.parse(document.getElementById('chart-data-data').textContent);
 
-
-</html>
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: '출석',
+                        data: chartData,
+                        borderColor: '#4f46e5',
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 2,
+                        fill: true,
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)'
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { display: true },
+                        y: {
+                            display: true,
+                            min: 0,
+                            max: 200
+                        }
+                    },
+                    maintainAspectRatio: false
+                }
+            });
+        }
+    });
+</script>
+{{ chart_labels|json_script:"chart-labels-data" }}
+{{ chart_data|json_script:"chart-data-data" }}
+{% endblock %}
