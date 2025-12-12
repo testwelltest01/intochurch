@@ -1,13 +1,15 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="ko" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}투명한 사역 교회{% endblock %}</title>
-    
+
     <!-- Pretendard Font -->
-    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <link rel="stylesheet" as="style" crossorigin
+        href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
 
     <!-- Tailwind Output CSS -->
     <link href="{% static 'css/output.css' %}" rel="stylesheet">
@@ -19,34 +21,52 @@
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
     <style>
-        body { font-family: 'Pretendard', sans-serif; }
-        [x-cloak] { display: none !important; }
+        body {
+            font-family: 'Pretendard', sans-serif;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans antialiased dark:bg-slate-900 dark:text-slate-100 selection:bg-brand-500 selection:text-white" x-data="{ darkMode: false, toggleTheme() { this.darkMode = !this.darkMode; document.documentElement.classList.toggle('dark'); } }">
+
+<body
+    class="bg-slate-50 text-slate-900 font-sans antialiased dark:bg-slate-900 dark:text-slate-100 selection:bg-brand-500 selection:text-white"
+    x-data="{ darkMode: false, toggleTheme() { this.darkMode = !this.darkMode; document.documentElement.classList.toggle('dark'); } }">
 
     <!-- Nav -->
-    <nav class="fixed w-full z-50 transition-all duration-300" 
-         :class="{ 'bg-white/80 backdrop-blur-md shadow-sm dark:bg-slate-900/80': $window.scrollY > 10, 'bg-transparent': $window.scrollY <= 10 }">
+    <nav class="fixed w-full z-50 transition-all duration-300" x-data="{ scrolled: false }"
+        @scroll.window="scrolled = (window.pageYOffset > 20)"
+        :class="{ 'bg-white/80 backdrop-blur-md shadow-sm dark:bg-slate-900/80': scrolled, 'bg-transparent': !scrolled }">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex-shrink-0 flex items-center">
-                    <a href="/" class="text-2xl font-bold bg-gradient-to-r from-brand-600 to-accent-600 bg-clip-text text-transparent hover:scale-105 transition-transform">
+                    <a href="/"
+                        class="text-2xl font-bold text-brand-600 dark:text-brand-400 hover:scale-105 transition-transform">
                         🕊️ Into Church
                     </a>
                 </div>
                 <div class="hidden md:flex space-x-8">
-                    <a href="#" class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 font-medium transition">사역 소개</a>
-                    <a href="#financial-section" class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 font-medium transition">재정 공개</a>
-                    <a href="#review-section" class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 font-medium transition">성도 리뷰</a>
+                    <a href="#"
+                        class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 font-medium transition">사역
+                        소개</a>
+                    <a href="#financial-section"
+                        class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 font-medium transition">재정
+                        공개</a>
+                    <a href="#review-section"
+                        class="text-slate-600 hover:text-brand-600 dark:text-slate-300 dark:hover:text-brand-400 font-medium transition">성도
+                        리뷰</a>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <button @click="toggleTheme()" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                    <button @click="toggleTheme()"
+                        class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                         <span x-show="!darkMode">🌙</span>
                         <span x-show="darkMode" x-cloak>☀️</span>
                     </button>
-                    <a href="/admin" class="px-4 py-2 rounded-full border border-slate-200 hover:border-brand-500 hover:text-brand-600 transition text-sm font-medium">
+                    <a href="/admin"
+                        class="px-4 py-2 rounded-full border border-slate-200 hover:border-brand-500 hover:text-brand-600 transition text-sm font-medium">
                         Log In
                     </a>
                 </div>
@@ -102,4 +122,5 @@
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
+
 </html>

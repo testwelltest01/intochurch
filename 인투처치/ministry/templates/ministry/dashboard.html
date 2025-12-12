@@ -77,8 +77,8 @@
                 </p>
                 <span class="text-2xl">👥</span>
             </div>
-            <p class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">{{
-                stat.worship_attendance }}<span class="text-xl text-slate-500 ml-1">명</span></p>
+            <p class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600">
+                {{stat.worship_attendance }}<span class="text-xl text-slate-500 ml-1">명</span></p>
             <p class="text-xs text-slate-400 mt-2 font-mono">{{ stat.date }} 기준</p>
         </div>
 
@@ -231,8 +231,8 @@
                     <tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">
                         {% for tx in transactions %}
                         <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                            <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-mono">{{
-                                tx.transaction_date|date:"Y.m.d" }}</td>
+                            <td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 font-mono">
+                                {{tx.transaction_date|date:"Y.m.d" }}</td>
                             <td class="px-6 py-4">
                                 <span
                                     class="px-2 py-1 text-xs font-bold rounded-full {% if tx.type == 'IN' %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400{% else %}bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400{% endif %}">
@@ -376,55 +376,8 @@
 
 </div>
 
-<!-- Onboarding Modal -->
-<div x-data="{ showModal: false }"
-    x-init="setTimeout(() => { if(!localStorage.getItem('visited')) showModal = true; }, 2000)" class="relative z-50">
-    <!-- Backdrop -->
-    <div x-show="showModal" x-transition.opacity class="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
+<!-- Onboarding Modal Removed temporarily due to UI blocking issue -->
 
-    <!-- Modal Content -->
-    <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="opacity-0 translate-y-10 scale-95"
-        x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-        x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-        x-transition:leave-end="opacity-0 translate-y-10 scale-95"
-        class="fixed inset-0 flex items-center justify-center p-4">
-
-        <div
-            class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100 dark:border-slate-700">
-            <div class="relative h-48 bg-gradient-to-br from-brand-500 to-accent-600">
-                <img src="https://images.unsplash.com/photo-1438232992991-995b7058bbb3?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                    class="w-full h-full object-cover opacity-50 mix-blend-overlay" alt="Welcome">
-                <button @click="showModal = false; localStorage.setItem('visited', 'true')"
-                    class="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white rounded-full p-2 transition">
-                    ✕
-                </button>
-                <div class="absolute bottom-6 left-6 text-white">
-                    <span
-                        class="px-2 py-1 bg-white/20 backdrop-blur rounded text-xs font-bold uppercase tracking-wider mb-2 inline-block">Welcome</span>
-                    <h3 class="text-3xl font-bold">환영합니다!</h3>
-                </div>
-            </div>
-            <div class="p-8">
-                <p class="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
-                    <span class="font-bold text-brand-600">투명한 사역 교회</span>에 처음 오셨나요?<br>
-                    투명함으로 세상을 섬기는 우리의 여정을 소개합니다.
-                </p>
-                <div class="space-y-3">
-                    <a href="#about" @click="showModal = false; localStorage.setItem('visited', 'true')"
-                        class="block w-full py-3 bg-brand-600 hover:bg-brand-700 text-white text-center rounded-lg font-bold shadow-lg hover:shadow-brand-500/30 transition">
-                        우리 교회 이야기 보기
-                    </a>
-                    <button @click="showModal = false; localStorage.setItem('visited', 'true')"
-                        class="block w-full py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 text-center rounded-lg font-bold transition">
-                        괜찮습니다, 둘러볼게요
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -497,29 +450,41 @@
 
         // Chart Logic (Mock Data for now or use stat data if available in JS context)
         const ctx = document.getElementById('miniAttendanceChart');
+        const chartLabels = JSON.parse(document.getElementById('chart-labels-data').textContent);
+        const chartData = JSON.parse(document.getElementById('chart-data-data').textContent);
+
         if (ctx) {
             new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: ['4주전', '3주전', '2주전', '지난주'],
+                    labels: chartLabels,
                     datasets: [{
                         label: '출석',
-                        data: [120, 135, 125, {{ stat.worship_attendance |default: 130 }}],
-                    borderColor: '#4f46e5',
-                    tension: 0.4,
-                    pointRadius: 0,
-                    borderWidth: 2,
-                    fill: true,
-                    backgroundColor: 'rgba(79, 70, 229, 0.1)'
-                }]
-            },
+                        data: chartData,
+                        borderColor: '#4f46e5',
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 2,
+                        fill: true,
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)'
+                    }]
+                },
                 options: {
-                plugins: { legend: { display: false } },
-                scales: { x: { display: false }, y: { display: false } },
-                maintainAspectRatio: false
-            }
+                    plugins: { legend: { display: true } },
+                    scales: {
+                        x: { display: true },
+                        y: {
+                            display: true,
+                            min: 0,
+                            max: 200
+                        }
+                    },
+                    maintainAspectRatio: false
+                }
             });
         }
     });
 </script>
+{{ chart_labels|json_script:"chart-labels-data" }}
+{{ chart_data|json_script:"chart-data-data" }}
 {% endblock %}
