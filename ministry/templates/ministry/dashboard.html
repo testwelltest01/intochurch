@@ -39,14 +39,8 @@
     </div>
     {% endfor %}
 
-    <!-- Navigation Buttons -->
-    <button onclick="changeSlide(-1)"
-        class="absolute left-8 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-4 rounded-full z-20 transition border border-white/10">❮</button>
-    <button onclick="changeSlide(1)"
-        class="absolute right-8 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-4 rounded-full z-20 transition border border-white/10">❯</button>
-
     <!-- Indicators -->
-    <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex space-x-4 z-20">
+    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex space-x-4 z-20">
         {% for slide in slides %}
         <button onclick="goToSlide({{ forloop.counter0 }})"
             class="indicator w-12 h-1 rounded-full bg-white/30 hover:bg-white transition"></button>
