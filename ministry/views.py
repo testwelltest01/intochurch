@@ -78,15 +78,11 @@ def home(request):
             for idx, filename in enumerate(file_list):
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
                     
-                    # 파일명 가공 (01_제목.jpg -> 제목)
-                    raw_name = os.path.splitext(filename)[0]
-                    clean_title = re.sub(r'^[\d]+[_-]', '', raw_name)
-                    title = clean_title.replace('_', ' ')
+                    title = ['우리교회는', '이제 신설되었습니다.']
                     
                     slides.append({
                         'id': idx, 
-                        'title': title,
-                        # [핵심 변경] URL도 /media/가 아니라 /static/으로 시작해야 합니다.
+                        'title': title, 
                         'image': {'url': f"/static/slides/{filename}"}
                     })
         else:
