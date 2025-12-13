@@ -69,25 +69,37 @@ def home(request):
     # [핵심 변경] media 폴더가 아니라 static 폴더를 뒤집니다!
     # Vercel에 배포된 소스코드 내의 static 폴더 경로입니다.
     slides_dir = os.path.join(settings.BASE_DIR, 'static', 'slides')
-    
+
     try:
         # 폴더가 있는지 확인
         if os.path.exists(slides_dir):
-            file_list = sorted(os.listdir(slides_dir)) # 이름순 정렬
+            file_list = sorted(os.listdir(slides_dir)) # 이름순 정렬 (slide1.jpg, slide2.jpg...)
+            
+            # [수정] 순서대로 보여줄 제목들을 리스트에 담습니다.
+            title_list = ["영원한 것을 위해 영원하지 않은 것을 희생하려고 합니다.",
+            "모든 사람이 죄를 범하였으매 하나님의 영광에 이르지 못하더니",
+            "우리가 아직 죄인되었을 때에 그리스도께서 우리를 위하여 죽으심으로\n하나님께서 우리에 대한 자기의 사랑을 확증하셨느니라",
+            "하나님이 세상을 이처럼 사랑하사 독생자를 주셨으니\n이는 그를 믿는 자마다 멸망하지 않고 영생을 얻게 하려 하심이라",
+            "새 계명을 너희에게 주노니 서로 사랑하라\n내가 너희를 사랑한 것 같이 너희도 서로 사랑하라"]
             
             for idx, filename in enumerate(file_list):
                 if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
                     
-                    title = ['우리교회는', '이제 신설되었습니다.']
+                    # [수정] 현재 순서(idx)에 맞는 제목을 가져옵니다.
+                    # (만약 사진이 제목보다 많으면 빈 칸으로 둡니다)
+                    if idx < len(title_list):
+                        current_title = title_list[idx]
+                    else:
+                        current_title = "" 
                     
                     slides.append({
                         'id': idx, 
-                        'title': title, 
+                        'title': current_title, # 여기서 짝지은 제목을 넣습니다
                         'image': {'url': f"/static/slides/{filename}"}
                     })
         else:
             print(f"⚠️ 경고: {slides_dir} 폴더를 찾을 수 없습니다.")
-            
+
     except Exception as e:
         print(f"❌ 이미지 로드 실패: {e}")
 
