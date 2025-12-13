@@ -61,44 +61,39 @@ def home(request):
             'date': last_report.date
         }
 
-    # --- 2. 메인 슬라이드 사진 (로컬 파일 사용) ---
-    # slides = SlideImage.objects.filter(is_active=True).order_by('order')
-    
-    # DB 대신 media/slides 폴더의 파일들을 직접 읽어옴
+# --- 2. 메인 슬라이드 사진 (GitHub 폴더 읽기 모드) ---
     from django.conf import settings
-    import re # 정규표현식 모듈 추가
-    slides = []
-    slides_dir = os.path.join(settings.MEDIA_ROOT, 'slides')
+    import re
     
-    # 폴더가 없으면 생성 (에러 방지)
-    if not os.path.exists(slides_dir):
-        os.makedirs(slides_dir)
-        
+    slides = []
+    # [핵심 변경] media 폴더가 아니라 static 폴더를 뒤집니다!
+    # Vercel에 배포된 소스코드 내의 static 폴더 경로입니다.
+    slides_dir = os.path.join(settings.BASE_DIR, 'static', 'slides')
+    
     try:
-        # 폴더 내의 파일들을 가져와서 보여줄 리스트 생성
-        file_list = sorted(os.listdir(slides_dir)) # 이름순 정렬
-        for idx, filename in enumerate(file_list):
-            # 이미지 파일 확장자만 허용
-            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
-                
-                # 파일명에서 확장자 제거
-                raw_name = os.path.splitext(filename)[0]
-                
-                # "1_제목" 또는 "01-제목" 같은 패턴에서 앞의 숫자 제거
-                # 예: "01_환영합니다" -> "환영합니다"
-                clean_title = re.sub(r'^[\d]+[_-]', '', raw_name)
-                
-                # 남은 언더바(_)는 띄어쓰기로 변경
-                # 예: "우리_교회_전경" -> "우리 교회 전경"
-                title = clean_title.replace('_', ' ')
-                
-                slides.append({
-                    'id': idx, 
-                    'title': title, # 가공된 제목 사용
-                    'image': {'url': f"{settings.MEDIA_URL}slides/{filename}"}
-                })
+        # 폴더가 있는지 확인
+        if os.path.exists(slides_dir):
+            file_list = sorted(os.listdir(slides_dir)) # 이름순 정렬
+            
+            for idx, filename in enumerate(file_list):
+                if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')):
+                    
+                    # 파일명 가공 (01_제목.jpg -> 제목)
+                    raw_name = os.path.splitext(filename)[0]
+                    clean_title = re.sub(r'^[\d]+[_-]', '', raw_name)
+                    title = clean_title.replace('_', ' ')
+                    
+                    slides.append({
+                        'id': idx, 
+                        'title': title,
+                        # [핵심 변경] URL도 /media/가 아니라 /static/으로 시작해야 합니다.
+                        'image': {'url': f"/static/slides/{filename}"}
+                    })
+        else:
+            print(f"⚠️ 경고: {slides_dir} 폴더를 찾을 수 없습니다.")
+            
     except Exception as e:
-        print(f"이미지 로드 실패: {e}")
+        print(f"❌ 이미지 로드 실패: {e}")
 
     # --- 3. 최근 재정 내역 (페이지네이션: 10개씩) ---
     all_transactions = FinancialTransaction.objects.order_by('-transaction_date')
