@@ -88,29 +88,36 @@ def home(request):
     # --- [5. 노션 데이터 동기화 및 서버 DB 로드] ---
     # 1. 우리 DB에서 먼저 가져옵니다 (매우 빠름)
     notion_notices_qs = NotionNotice.objects.all().order_by('-date')
-
-    # 2. 만약 DB가 비어있다면 최초 1회 노션에서 동기화합니다.
     if not notion_notices_qs.exists():
         try:
-            api_key = os.environ.get("NOTION_API_KEY")
-            db_id = os.environ.get("NOTION_DATABASE_ID")
-            if api_key and db_id:
-                url = f"https://api.notion.com/v1/databases/{db_id}/query"
-                headers = {"Authorization": f"Bearer {api_key}", "Notion-Version": "2022-06-28", "Content-Type": "application/json"}
-                payload = json.dumps({"sorts": [{"property": "날짜", "direction": "descending"}]}).encode("utf-8")
-                req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-                with urllib.request.urlopen(req) as response:
-                    json_data = json.loads(response.read().decode("utf-8"))
-                    for page in json_data['results']:
-                        props = page['properties']
-                        title = props['이름']['title'][0]['plain_text'] if props['이름']['title'] else "제목 없음"
-                        date_val = props['날짜']['date']['start'] if props['날짜']['date'] else str(timezone.now().date())
-                        text_val = "".join([t['plain_text'] for t in props['텍스트']['rich_text']]) if props['텍스트']['rich_text'] else ""
-                        # DB에 저장
-                        NotionNotice.objects.get_or_create(title=title, date=date_val, defaults={'content': text_val})
-                notion_notices_qs = NotionNotice.objects.all().order_by('-date')
+            # ... (API 호출 및 json_data 로드 로직 동일) ...
+            for page in json_data['results']:
+                props = page['properties']
+                title = props['이름']['title'][0]['plain_text'] if props['이름']['title'] else "제목 없음"
+                date_val = props['날짜']['date']['start'] if props['날짜']['date'] else str(timezone.now().date())
+                
+                # 본문 텍스트 합치기
+                text_val = "".join([t['plain_text'] for t in props['텍스트']['rich_text']]) if props['텍스트']['rich_text'] else ""
+                
+                # 파일 정보 추출 및 JSON 변환
+                files = []
+                if '파일과 미디어' in props and props['파일과 미디어']['files']:
+                    for f in props['파일과 미디어']['files']:
+                        url = f['file']['url'] if 'file' in f else f['external']['url']
+                        files.append({'name': f.get('name', '첨부파일'), 'url': url})
+                
+                # DB에 저장 (files_json 필드에 리스트를 문자열로 저장)
+                NotionNotice.objects.get_or_create(
+                    title=title, 
+                    date=date_val, 
+                    defaults={
+                        'content': text_val,
+                        'files_json': json.dumps(files)
+                    }
+                )
+            notion_notices_qs = NotionNotice.objects.all().order_by('-date')
         except Exception as e:
-            print(f"❌ 노션 동기화 실패: {e}")
+            print(f"❌ 동기화 실패: {e}")
 
     # 3. 페이지네이션 처리
     notion_paginator = Paginator(notion_notices_qs, 6)

@@ -122,11 +122,7 @@ class SlideImage(models.Model):
 class NotionNotice(models.Model):
     title = models.CharField(max_length=200)
     content = models.TextField(blank=True)
+    # 파일 정보를 JSON 형태로 저장하기 위해 TextField 사용
+    files_json = models.TextField(blank=True, default="[]") 
     date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.title
-
-    class Meta:
-        ordering = ['-date']
