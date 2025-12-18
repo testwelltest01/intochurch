@@ -213,7 +213,7 @@ def home(request):
         print(f"❌ 노션 연동 오류: {e}")
 
     # --- 5-1. 노션 데이터 페이지네이션 (10개씩) ---
-    notion_paginator = Paginator(notion_notices, 10)
+    notion_paginator = Paginator(notion_notices, 6)
     notion_page = request.GET.get('notion_page', 1)
     recent_notices = notion_paginator.get_page(notion_page)
 
