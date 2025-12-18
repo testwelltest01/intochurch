@@ -140,73 +140,95 @@ def home(request):
                 "Notion-Version": "2022-06-28", 
                 "Content-Type": "application/json"
             }
-            # 날짜 최신순 정렬
-            payload = {
-                "page_size": 5,
-                "sorts": [{"property": "날짜", "direction": "descending"}]
-            }
-            data = json.dumps(payload).encode("utf-8")
-            
-            req = urllib.request.Request(url, data=data, headers=headers, method="POST")
-            with urllib.request.urlopen(req) as response:
-                response_body = response.read().decode("utf-8")
-                json_data = json.loads(response_body)
+            has_more = True
+            start_cursor = None
+
+            while has_more:
+                # 날짜 최신순 정렬
+                payload = {
+                    "page_size": 100,
+                    "sorts": [{"property": "날짜", "direction": "descending"}]
+                }
+                if start_cursor:
+                    payload["start_cursor"] = start_cursor
+
+                data = json.dumps(payload).encode("utf-8")
                 
-                for page in json_data['results']:
-                    props = page['properties']
+                req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+                with urllib.request.urlopen(req) as response:
+                    response_body = response.read().decode("utf-8")
+                    json_data = json.loads(response_body)
                     
-                    # 1. 이름 (제목)
-                    title = "제목 없음"
-                    if '이름' in props and props['이름']['title']:
-                        title = props['이름']['title'][0]['plain_text']
+                    for page in json_data['results']:
+                        props = page['properties']
+                        
+                        # 1. 이름 (제목)
+                        title = "제목 없음"
+                        if '이름' in props and props['이름']['title']:
+                            title = props['이름']['title'][0]['plain_text']
+                        
+                        # 2. 날짜
+                        date_str = ""
+                        if '날짜' in props and props['날짜']['date']:
+                            date_str = props['날짜']['date']['start']
+
+                        # 3. 텍스트 (본문 내용)
+                        text_content = ""
+                        if '텍스트' in props and props['텍스트']['rich_text']:
+                            # 여러 줄일 경우를 대비해 합칩니다
+                            text_content = "".join([t['plain_text'] for t in props['텍스트']['rich_text']])
+
+                        # 4. 파일과 미디어 (다운로드 링크)
+                        files = []
+                        if '파일과 미디어' in props and props['파일과 미디어']['files']:
+                            for f_info in props['파일과 미디어']['files']:
+                                f_name = f_info.get('name', '첨부파일')
+                                f_url = ""
+                                if 'file' in f_info:
+                                    f_url = f_info['file']['url']
+                                elif 'external' in f_info:
+                                    f_url = f_info['external']['url']
+                                
+                                if f_url:
+                                    files.append({
+                                        'name': f_name,
+                                        'url': f_url
+                                    })
+
+                        notion_notices.append({
+                            'title': title,
+                            'date': date_str,
+                            'text': text_content,
+                            'files': files,
+                            'url': page['url']
+                        })
                     
-                    # 2. 날짜
-                    date_str = ""
-                    if '날짜' in props and props['날짜']['date']:
-                        date_str = props['날짜']['date']['start']
-
-                    # 3. 텍스트 (본문 내용)
-                    text_content = ""
-                    if '텍스트' in props and props['텍스트']['rich_text']:
-                        # 여러 줄일 경우를 대비해 합칩니다
-                        text_content = "".join([t['plain_text'] for t in props['텍스트']['rich_text']])
-
-                    # 4. 파일과 미디어 (다운로드 링크)
-                    files = []
-                    if '파일과 미디어' in props and props['파일과 미디어']['files']:
-                        for f_info in props['파일과 미디어']['files']:
-                            f_name = f_info.get('name', '첨부파일')
-                            f_url = ""
-                            if 'file' in f_info:
-                                f_url = f_info['file']['url']
-                            elif 'external' in f_info:
-                                f_url = f_info['external']['url']
-                            
-                            if f_url:
-                                files.append({
-                                    'name': f_name,
-                                    'url': f_url
-                                })
-
-                    notion_notices.append({
-                        'title': title,
-                        'date': date_str,
-                        'text': text_content,
-                        'files': files,
-                        'url': page['url']
-                    })
+                    # 다음 페이지 커서 확인
+                    has_more = json_data.get('has_more', False)
+                    start_cursor = json_data.get('next_cursor')
                     
             print(f"✅ 노션 데이터 {len(notion_notices)}개 로드 완료!")
             
     except Exception as e:
         print(f"❌ 노션 연동 오류: {e}")
 
+    # --- 5-1. 노션 데이터 페이지네이션 (10개씩) ---
+    notion_paginator = Paginator(notion_notices, 10)
+    notion_page = request.GET.get('notion_page', 1)
+    recent_notices = notion_paginator.get_page(notion_page)
+
+    # [HTMX] 노션 페이지네이션 요청인 경우 부분 템플릿만 렌더링
+    if request.headers.get('HX-Request') and 'notion_page' in request.GET:
+        return render(request, 'ministry/partials/notion_list.html', {
+            'notion_notices': recent_notices
+        })
+
     return render(request, 'ministry/dashboard.html', {
         'stat': stat,
         'slides': slides,
         'transactions': recent_transactions,
         'reviews': recent_reviews,
-        'notion_notices': notion_notices,
+        'notion_notices': recent_notices, # 페이지네이션된 객체 전달
         'chart_labels': chart_labels,
         'chart_data': chart_data,
         'has_reviewed_today': has_reviewed_today,
