@@ -47,7 +47,7 @@
 <div class="mt-12 flex justify-center space-x-2">
     {% if notion_notices.has_previous %}
     <button hx-get="?notion_page={{ notion_notices.previous_page_number }}" hx-target="#notion-list-container"
-        hx-swap="innerHTML"
+        hx-swap="innerHTML show:none"
         class="px-3 py-1 rounded-md text-sm font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition">
         &laquo;
     </button>
@@ -62,7 +62,7 @@
 
     {% if notion_notices.has_next %}
     <button hx-get="?notion_page={{ notion_notices.next_page_number }}" hx-target="#notion-list-container"
-        hx-swap="innerHTML"
+        hx-swap="innerHTML show:none"
         class="px-3 py-1 rounded-md text-sm font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition">
         &raquo;
     </button>
