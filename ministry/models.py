@@ -117,3 +117,16 @@ class SlideImage(models.Model):
     class Meta:
         verbose_name = "메인 슬라이드 사진"
         verbose_name_plural = "메인 슬라이드 사진"
+
+# 노션 데이터를 담아둘 창고
+class NotionNotice(models.Model):
+    title = models.CharField(max_length=200)
+    content = models.TextField(blank=True)
+    date = models.DateField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        ordering = ['-date']
