@@ -115,7 +115,65 @@ def home(request):
                         'files_json': json.dumps(files)
                     }
                 )
-            notion_notices_qs = NotionNotice.objects.all().order_by('-date')
+            # --- [5. 노션 데이터 동기화 및 서버 DB 로드] ---
+    notion_notices_qs = NotionNotice.objects.all().order_by('-date')
+
+    # 데이터가 없으면 즉시 동기화 시도
+    if not notion_notices_qs.exists():
+        try:
+            api_key = os.environ.get("NOTION_API_KEY")
+            db_id = os.environ.get("NOTION_DATABASE_ID")
+            
+            if api_key and db_id:
+                url = f"https://api.notion.com/v1/databases/{db_id}/query"
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "Notion-Version": "2022-06-28",
+                    "Content-Type": "application/json"
+                }
+                # 날짜 기준 내림차순 정렬 요청
+                payload = json.dumps({"sorts": [{"property": "날짜", "direction": "descending"}]}).encode("utf-8")
+                req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+                
+                with urllib.request.urlopen(req) as response:
+                    json_data = json.loads(response.read().decode("utf-8"))
+                    
+                    for page in json_data.get('results', []):
+                        props = page.get('properties', {})
+                        
+                        # 1. 제목 추출
+                        title_list = props.get('이름', {}).get('title', [])
+                        title = title_list[0]['plain_text'] if title_list else "제목 없음"
+                        
+                        # 2. 날짜 추출
+                        date_info = props.get('날짜', {}).get('date')
+                        date_val = date_info['start'] if date_info else str(timezone.now().date())
+                        
+                        # 3. 본문 텍스트 추출
+                        rich_text = props.get('텍스트', {}).get('rich_text', [])
+                        text_val = "".join([t['plain_text'] for t in rich_text])
+                        
+                        # 4. 파일 및 미디어 추출
+                        files_data = props.get('파일과 미디어', {}).get('files', [])
+                        file_list = []
+                        for f in files_data:
+                            f_url = f.get('file', {}).get('url') or f.get('external', {}).get('url')
+                            if f_url:
+                                file_list.append({'name': f.get('name', '첨부파일'), 'url': f_url})
+                        
+                        # DB 저장 (이미 있으면 건너뜀)
+                        NotionNotice.objects.get_or_create(
+                            title=title,
+                            date=date_val,
+                            defaults={
+                                'content': text_val,
+                                'files_json': json.dumps(file_list) # 리스트를 글자 형태로 저장
+                            }
+                        )
+                # 저장 후 다시 불러오기
+                notion_notices_qs = NotionNotice.objects.all().order_by('-date')
+        except Exception as e:
+            print(f"❌ 동기화 실패: {e}")
         except Exception as e:
             print(f"❌ 동기화 실패: {e}")
 
