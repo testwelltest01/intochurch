@@ -74,9 +74,10 @@
     // Map Logic (오프라인이면 지도 스크립트가 없으므로 건너뜁니다)
     document.addEventListener("DOMContentLoaded", function () {
         if (!window.naver || !naver.maps) return;
-        var pangyoStation = new naver.maps.LatLng(37.394776, 127.11116);
-        var map = new naver.maps.Map('map', { center: pangyoStation, zoom: 15 });
-        new naver.maps.Marker({ position: pangyoStation, map: map, title: "투명한 사역 교회" });
+        // 예배 장소: 스테드패스트 커피앤웍스 (판교공원로2길 22)
+        var church = new naver.maps.LatLng(37.3894062, 127.0921454);
+        var map = new naver.maps.Map('map', { center: church, zoom: 16 });
+        new naver.maps.Marker({ position: church, map: map, title: "인투처치 · 스테드패스트 커피앤웍스" });
     });
 </script>
 {% endblock %}
