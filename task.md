@@ -24,3 +24,20 @@
 - [ ] 기술적 개선
     - [ ] 반응형 디자인 최적화 <!-- id: 15 -->
     - [ ] SEO 및 성능 튜닝 <!-- id: 16 -->
+
+# 모바일 전용 PWA 전환
+
+- [x] CDN 라이브러리를 로컬 파일로 교체 (`npm run vendor` → `static/vendor/`)
+- [x] 앱 셸: 상단 앱바 + 하단 탭바, PC에서는 가운데 430px 모바일 화면
+- [x] 다크 모드 버튼 고치기 (Alpine store, 새로고침해도 유지)
+- [x] 탭별 페이지 분리: 홈 `/`, 소식 `/news/`, 재정 `/finance/`, 리뷰 `/reviews/`, 오시는 길 `/location/`
+- [x] 목록 "더 보기" (HTMX, `?page=N`)
+- [x] 노션 공지 본문이 안 보이던 문제 수정 (`notice.text` → `notice.content`)
+- [x] manifest (`/manifest.webmanifest`) + 아이콘 (`static/icons/`, 임시 아이콘)
+- [x] 서비스 워커 (`/sw.js`): 본 화면 저장, 오프라인 안내 화면 (`/offline/`)
+- [x] 오프라인에서 리뷰 등록 막기
+- [x] 앱 설치 버튼 (Android) / 홈 화면 추가 안내 (iOS)
+- [x] 테스트 (`python manage.py test ministry`)
+- [ ] 정식 로고로 아이콘 교체
+- [ ] 푸시 알림 (iOS는 홈 화면에 설치한 경우만 가능)
+- [ ] 노션 공지 주기적 동기화 (지금은 DB가 비었을 때 1번만 가져옴)
