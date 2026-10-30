@@ -4,7 +4,8 @@
 {% block app_title %}오시는 길{% endblock %}
 
 {% block content %}
-<div class="space-y-3 px-4 pt-1" x-data="{ address: '경기 성남시 분당구 판교역로 160' }">
+{% with place='스테드패스트 커피앤웍스' address='경기 성남시 분당구 판교공원로2길 22, 1층' %}
+<div class="space-y-3 px-4 pt-1" x-data="{ address: '{{ address }}' }">
     <!-- Map -->
     <div class="card relative h-64 w-full overflow-hidden">
         <div id="map" class="h-full w-full"></div>
@@ -17,9 +18,12 @@
 
     <!-- Address -->
     <section class="card p-5">
-        <p class="label">주소</p>
+        <p class="label">예배 장소</p>
         <div class="mt-1 flex items-start justify-between gap-3">
-            <p class="text-[17px] font-bold leading-snug" x-text="address">경기 성남시 분당구 판교역로 160</p>
+            <div class="min-w-0">
+                <p class="text-[17px] font-bold leading-snug">{{ place }}</p>
+                <p class="mt-1 text-sm text-slate-600 dark:text-slate-300">{{ address }}</p>
+            </div>
             <button type="button"
                 @click="navigator.clipboard.writeText(address).then(() => $store.ui.showToast('주소를 복사했어요.'))"
                 class="flex shrink-0 items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-[13px] font-medium text-slate-600 active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300">
@@ -27,7 +31,7 @@
                 복사
             </button>
         </div>
-        <a href="https://map.naver.com/p/search/{{ '경기 성남시 분당구 판교역로 160'|urlencode }}" target="_blank"
+        <a href="https://map.naver.com/p/search/{{ place|urlencode }}" target="_blank"
             rel="noopener" class="btn-primary mt-4">
             {% include 'ministry/partials/icon.html' with name='navigation' size='h-4 w-4' %}
             네이버 지도로 길찾기
@@ -61,6 +65,7 @@
         <p class="mt-4 text-xs text-slate-400 dark:text-slate-600">&copy; 2025 Into Church. All rights reserved.</p>
     </div>
 </div>
+{% endwith %}
 {% endblock %}
 
 {% block extra_scripts %}
@@ -69,9 +74,10 @@
     // Map Logic (오프라인이면 지도 스크립트가 없으므로 건너뜁니다)
     document.addEventListener("DOMContentLoaded", function () {
         if (!window.naver || !naver.maps) return;
-        var pangyoStation = new naver.maps.LatLng(37.394776, 127.11116);
-        var map = new naver.maps.Map('map', { center: pangyoStation, zoom: 15 });
-        new naver.maps.Marker({ position: pangyoStation, map: map, title: "투명한 사역 교회" });
+        // 예배 장소: 스테드패스트 커피앤웍스 (판교공원로2길 22)
+        var church = new naver.maps.LatLng(37.3894062, 127.0921454);
+        var map = new naver.maps.Map('map', { center: church, zoom: 16 });
+        new naver.maps.Marker({ position: church, map: map, title: "인투처치 · 스테드패스트 커피앤웍스" });
     });
 </script>
 {% endblock %}
