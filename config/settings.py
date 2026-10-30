@@ -6,6 +6,7 @@ Django 설정 파일입니다.
 import os
 import dj_database_url
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 
 # 프로젝트의 기본 경로를 설정합니다.
 # BASE_DIR은 현재 파일(settings.py)의 부모의 부모 폴더, 즉 프로젝트의 최상위 폴더(인투처치)를 가리킵니다.
@@ -13,28 +14,49 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+# Vercel에서 실행 중인지 확인합니다.
+# Vercel은 배포 환경에 VERCEL=1 환경변수를 자동으로 넣어줍니다.
+# (Vercel 프로젝트 설정의 "Enable access to System Environment Variables"가 켜져 있어야 합니다)
+ON_VERCEL = bool(os.environ.get('VERCEL'))
+
 # 개발 모드 설정 (중요!)
 # SECURITY WARNING: 실제 배포할 때는 비밀키를 절대 노출하면 안 됩니다.
-# .env 파일에서 SECRET_KEY를 가져오되, 없으면 기본값을 사용합니다(개발 환경용).
+# 내 컴퓨터에서는 .env 파일에서 값을 읽어옵니다. (.env는 git에 올리지 않습니다)
+# Vercel에서는 .env를 읽지 않고, 프로젝트 설정의 환경변수만 사용합니다.
 env_path = BASE_DIR / '.env'
-if env_path.exists():
+if env_path.exists() and not ON_VERCEL:
     from dotenv import load_dotenv
     load_dotenv(env_path)
-
-SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key-for-dev-only-12345')
 
 # 디버그 모드 설정
 # True면 에러 발생 시 상세한 에러 페이지를 보여줍니다 (개발할 때 좋음).
 # False면 "서버 에러입니다" 같은 일반적인 문구만 보여줍니다 (실제 서비스할 때 필수).
-# 프로덕션(배포) 환경에서는 반드시 False여야 보안상 안전합니다.
-DEBUG = os.environ.get('DEBUG', 'True') == 'True'
+# Vercel에서는 기본값이 False, 내 컴퓨터에서는 기본값이 True입니다.
+DEBUG = os.environ.get('DEBUG', 'False' if ON_VERCEL else 'True') == 'True'
+
+# 비밀키 설정
+# 배포 환경(Vercel 또는 DEBUG=False)에서는 반드시 환경변수로 SECRET_KEY를 넣어야 합니다.
+# 내 컴퓨터에서 .env 없이 실행할 때만 아래의 개발용 임시 키를 사용합니다.
+SECRET_KEY = os.environ.get('SECRET_KEY')
+if not SECRET_KEY:
+    if ON_VERCEL or not DEBUG:
+        raise ImproperlyConfigured('SECRET_KEY 환경변수가 설정되어 있지 않습니다.')
+    SECRET_KEY = 'django-insecure-local-development-only'
 
 # 접속을 허용할 도메인 주소들입니다.
 # intochurch.vercel.app: 배포될 사이트 주소
 # 127.0.0.1: 내 컴퓨터 (숫자 주소)
 # localhost: 내 컴퓨터 (영어 주소)
 # [::1]: 내 컴퓨터 (IPv6 주소, 혹시 몰라 넣어둠)
-ALLOWED_HOSTS = ['intochurch.vercel.app', '127.0.0.1', 'localhost', '[::1]', "*"]
+ALLOWED_HOSTS = ['intochurch.vercel.app', '127.0.0.1', 'localhost', '[::1]']
+
+# Vercel이 자동으로 넣어주는 주소들도 허용합니다.
+# VERCEL_URL: 이번 배포의 고유 주소 (예: intochurch-abc123-....vercel.app)
+# VERCEL_BRANCH_URL: 브랜치별 미리보기 주소
+# VERCEL_PROJECT_PRODUCTION_URL: 운영 도메인 (커스텀 도메인을 연결하면 그 주소)
+for var in ('VERCEL_URL', 'VERCEL_BRANCH_URL', 'VERCEL_PROJECT_PRODUCTION_URL'):
+    if os.environ.get(var):
+        ALLOWED_HOSTS.append(os.environ[var])
 
 # 설치된 앱(Application) 정의
 # Django는 '앱' 단위로 기능을 쪼개서 관리합니다.
@@ -212,9 +234,26 @@ STORAGES = {
 }
 
 # 배포 환경에서 WhiteNoise 사용 (정적 파일만)
-if not DEBUG:
+# 이 저장소는 collectstatic으로 만든 manifest 파일이 필요합니다.
+# Vercel은 collectstatic을 실행하지 않으므로 Vercel에서는 쓰지 않습니다. (쓰면 모든 페이지가 500 에러)
+if not DEBUG and not ON_VERCEL:
     STORAGES['staticfiles'] = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    }
+
+# Vercel에서는 collectstatic 없이 WhiteNoise가 static 폴더와 관리자 페이지 파일을 직접 찾아서 서빙합니다.
+# (DEBUG=True일 때는 원래 이렇게 동작하지만, DEBUG=False가 되면 꺼지므로 직접 켜줍니다)
+if ON_VERCEL:
+    WHITENOISE_USE_FINDERS = True
+
+# DEBUG=False일 때는 Django가 에러 내용을 화면에도, 로그에도 남기지 않습니다.
+# Vercel 대시보드의 Logs 탭에서 에러 원인을 볼 수 있도록 콘솔에 출력합니다.
+if not DEBUG:
+    LOGGING = {
+        'version': 1,
+        'disable_existing_loggers': False,
+        'handlers': {'console': {'class': 'logging.StreamHandler'}},
+        'loggers': {'django': {'handlers': ['console'], 'level': 'ERROR'}},
     }
 
 MEDIA_URL = '/media/'

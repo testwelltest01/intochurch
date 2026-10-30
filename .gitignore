@@ -1,2 +1,19 @@
 .vercel
 .env*.local
+
+# 비밀값 (SECRET_KEY 등은 Vercel 환경변수에 넣습니다)
+.env
+참고할 것/IDPW.txt
+
+# 로컬 데이터베이스 (운영 환경은 DATABASE_URL의 Postgres를 사용)
+db.sqlite3
+
+# npm install 하면 다시 생기는 폴더
+node_modules/
+
+# 파이썬 캐시
+__pycache__/
+
+# collectstatic 결과물과 업로드된 파일
+staticfiles/
+media/
