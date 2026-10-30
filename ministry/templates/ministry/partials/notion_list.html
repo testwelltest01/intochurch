@@ -1,71 +1,43 @@
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {% for notice in notion_notices %}
-    <div class="block group h-full">
-        <div
-            class="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-sm hover:shadow-xl transition border border-slate-100 dark:border-slate-700 group-hover:border-brand-200 dark:group-hover:border-brand-800 h-full flex flex-col justify-between">
-            <div>
-                <div class="flex justify-between items-start mb-4">
-                    <span
-                        class="px-2 py-1 bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-400 text-xs font-bold rounded uppercase">Notice</span>
-                    <span class="text-slate-400 text-sm">{{ notice.date }}</span>
-                </div>
-                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-200 mb-3">
-                    {{ notice.title }}
-                </h3>
-                {% if notice.text %}
-                <p class="text-slate-600 dark:text-slate-400 text-sm whitespace-pre-wrap mb-4">
-                    {{ notice.text }}
-                </p>
-                {% endif %}
-
-                {% if notice.files %}
-                <div class="space-y-2 mt-2">
-                    {% for file in notice.files %}
-                    <a href="{{ file.url }}" target="_blank"
-                        class="flex items-center p-2 rounded-lg bg-slate-50 dark:bg-slate-700/50 hover:bg-brand-50 dark:hover:bg-slate-600 text-sm text-slate-600 dark:text-slate-300 transition group/file">
-                        <span class="mr-2 text-lg">📄</span>
-                        <span class="truncate">{{ file.name }}</span>
-                        <span
-                            class="ml-auto opacity-0 group-hover/file:opacity-100 text-brand-500 text-xs font-bold">Download</span>
-                    </a>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-        </div>
+{% for notice in notion_notices %}
+<article
+    class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <div class="mb-3 flex items-start justify-between">
+        <span
+            class="rounded bg-brand-50 px-2 py-1 text-xs font-bold uppercase text-brand-600 dark:bg-slate-700 dark:text-brand-400">Notice</span>
+        <span class="text-sm text-slate-400">{{ notice.date }}</span>
     </div>
-    {% empty %}
-    <div
-        class="col-span-2 text-center py-12 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
-        <p class="text-slate-500">등록된 소식이 없습니다.</p>
-    </div>
-    {% endfor %}
-</div>
-
-<!-- Pagination -->
-{% if notion_notices.has_other_pages %}
-<div class="mt-12 flex justify-center space-x-2">
-    {% if notion_notices.has_previous %}
-    <button hx-get="?notion_page={{ notion_notices.previous_page_number }}" hx-target="#notion-list-container"
-        hx-swap="innerHTML show:none"
-        class="px-3 py-1 rounded-md text-sm font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition">
-        &laquo;
-    </button>
+    <h3 class="mb-2 text-lg font-bold text-slate-800 dark:text-slate-200">{{ notice.title }}</h3>
+    {% if notice.content %}
+    <p class="mb-3 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-400">{{ notice.content }}</p>
     {% endif %}
 
-    {% for i in notion_notices.paginator.page_range %}
-    <button hx-get="?notion_page={{ i }}" hx-target="#notion-list-container" hx-swap="innerHTML"
-        class="px-3 py-1 rounded-md text-sm font-bold {% if notion_notices.number == i %}bg-brand-600 text-white shadow-lg shadow-brand-500/30{% else %}bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700{% endif %} transition">
-        {{ i }}
-    </button>
-    {% endfor %}
-
-    {% if notion_notices.has_next %}
-    <button hx-get="?notion_page={{ notion_notices.next_page_number }}" hx-target="#notion-list-container"
-        hx-swap="innerHTML show:none"
-        class="px-3 py-1 rounded-md text-sm font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition">
-        &raquo;
-    </button>
+    {% if notice.files %}
+    <div class="mt-2 space-y-2">
+        {% for file in notice.files %}
+        <a href="{{ file.url }}" target="_blank" rel="noopener"
+            class="flex items-center rounded-lg bg-slate-50 p-3 text-sm text-slate-600 transition active:bg-brand-50 dark:bg-slate-700/50 dark:text-slate-300 dark:active:bg-slate-600">
+            <span class="mr-2 text-lg">📄</span>
+            <span class="truncate">{{ file.name }}</span>
+            <span class="ml-auto pl-2 text-xs font-bold text-brand-500">열기</span>
+        </a>
+        {% endfor %}
+    </div>
     {% endif %}
+</article>
+{% empty %}
+{% if notion_notices.number == 1 %}
+<div
+    class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-12 text-center dark:border-slate-700 dark:bg-slate-800/50">
+    <p class="text-slate-500">등록된 소식이 없습니다.</p>
 </div>
+{% endif %}
+{% endfor %}
+
+<!-- 더 보기: 누르면 이 버튼 자리에 다음 소식들이 이어 붙습니다 -->
+{% if notion_notices.has_next %}
+<button type="button" hx-get="{% url 'news' %}?page={{ notion_notices.next_page_number }}" hx-target="this"
+    hx-swap="outerHTML" hx-disabled-elt="this"
+    class="w-full rounded-2xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-600 transition active:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:active:bg-slate-700">
+    더 보기
+</button>
 {% endif %}

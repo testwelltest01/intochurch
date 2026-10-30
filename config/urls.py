@@ -23,6 +23,15 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'), # 따옴표 사이를 비워두면 메인화면이 됩니다
+    # 하단 탭 화면들
+    path('news/', views.news, name='news'),
+    path('finance/', views.finance, name='finance'),
+    path('reviews/', views.reviews, name='reviews'),
+    path('location/', views.location, name='location'),
+    # PWA (오프라인 안내 화면, 앱 설치 정보, 서비스 워커)
+    path('offline/', views.offline, name='offline'),
+    path('manifest.webmanifest', views.manifest, name='manifest'),
+    path('sw.js', views.service_worker, name='service_worker'),
 ]
 
 if settings.DEBUG:

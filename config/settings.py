@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',      # 로그인 정보를 유지하는 세션 기능
     'django.contrib.messages',      # 알림 메시지 기능
     'django.contrib.staticfiles',   # CSS, 이미지 등 정적 파일 관리
+    'django.contrib.humanize',      # 금액에 천 단위 쉼표(1,000) 넣기 등 숫자 표시 도우미
     
     # 내가 만든 앱
     'ministry',  # 사역 관련 기능이 들어있는 앱

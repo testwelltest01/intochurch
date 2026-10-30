@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}오시는 길 · 투명한 사역 교회{% endblock %}
+{% block app_title %}📍 찾아오시는 길{% endblock %}
+
+{% block content %}
+<div class="space-y-6 px-4 pt-5">
+    <!-- Map -->
+    <div class="relative h-72 w-full overflow-hidden rounded-2xl bg-slate-200 shadow-xl dark:bg-slate-800">
+        <div id="map" class="h-full w-full"></div>
+        <div x-show="!$store.ui.online" x-cloak
+            class="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 text-center text-sm text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+            <span class="mb-2 text-3xl">🗺️</span>
+            지도는 온라인에서 볼 수 있어요.
+        </div>
+    </div>
+
+    <!-- Address -->
+    <section class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <h2 class="mb-1 text-xs font-bold uppercase tracking-wider text-slate-400">주소</h2>
+        <p class="text-lg font-bold text-slate-900 dark:text-white">경기 성남시 분당구 판교역로 160</p>
+        <a href="https://map.naver.com/p/search/{{ '경기 성남시 분당구 판교역로 160'|urlencode }}" target="_blank" rel="noopener"
+            class="mt-4 flex w-full items-center justify-center rounded-lg bg-brand-600 py-3 text-sm font-bold text-white active:bg-brand-700">
+            네이버 지도에서 길찾기
+        </a>
+    </section>
+
+    <!-- Contact -->
+    <section class="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
+        <a href="mailto:admin@intochurch.com" class="flex items-center gap-3 p-4 active:bg-slate-50 dark:active:bg-slate-700">
+            <span class="text-xl">✉️</span>
+            <span class="flex-1">
+                <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Email</span>
+                <span class="block font-medium text-slate-800 dark:text-slate-200">admin@intochurch.com</span>
+            </span>
+            <span class="text-slate-300">›</span>
+        </a>
+        <a href="https://www.instagram.com/choihyunseok_/" target="_blank" rel="noopener"
+            class="flex items-center gap-3 p-4 active:bg-slate-50 dark:active:bg-slate-700">
+            <span class="text-xl">📸</span>
+            <span class="flex-1">
+                <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Instagram</span>
+                <span class="block font-medium text-slate-800 dark:text-slate-200">@choihyunseok_</span>
+            </span>
+            <span class="text-slate-300">›</span>
+        </a>
+    </section>
+
+    <!-- About -->
+    <div class="pb-2 pt-4 text-center">
+        <p class="text-lg font-bold text-slate-900 dark:text-white">Into Church</p>
+        <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">투명함으로 세상과 소통하는<br>새로운 교회의 기준입니다.</p>
+        <p class="mt-6 text-xs text-slate-400">&copy; 2025 Into Church. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=nm5q0b1hyn"></script>
+<script>
+    // Map Logic (오프라인이면 지도 스크립트가 없으므로 건너뜁니다)
+    document.addEventListener("DOMContentLoaded", function () {
+        if (!window.naver || !naver.maps) return;
+        var pangyoStation = new naver.maps.LatLng(37.394776, 127.11116);
+        var map = new naver.maps.Map('map', { center: pangyoStation, zoom: 15 });
+        new naver.maps.Marker({ position: pangyoStation, map: map, title: "투명한 사역 교회" });
+    });
+</script>
+{% endblock %}

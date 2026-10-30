@@ -4,7 +4,8 @@
   "description": "Into Church Redesign",
   "main": "index.js",
   "scripts": {
-    "build": "tailwindcss -i ./static/src/input.css -o ./static/css/output.css --minify",
+    "vendor": "node scripts/copy-vendor.js",
+    "build": "npm run vendor && tailwindcss -i ./static/src/input.css -o ./static/css/output.css --minify",
     "watch": "tailwindcss -i ./static/src/input.css -o ./static/css/output.css --watch"
   },
   "keywords": [],
@@ -18,6 +19,7 @@
   "dependencies": {
     "alpinejs": "^3.14.3",
     "aos": "^2.3.4",
-    "chart.js": "^4.4.7"
+    "chart.js": "^4.4.7",
+    "htmx.org": "^1.9.10"
   }
 }
