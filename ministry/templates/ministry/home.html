@@ -3,20 +3,8 @@
 
 {% block content %}
 <div class="space-y-3 px-4 pt-1">
-    <!-- iOS 홈 화면 추가 안내 (설치 전 Safari에서만 보임) -->
-    <div x-show="$store.ui.showIosHint" x-cloak class="card flex items-center gap-3 p-4">
-        <div class="icon-tile bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-400">
-            {% include 'ministry/partials/icon.html' with name='share' %}
-        </div>
-        <p class="flex-1 text-sm leading-snug text-slate-600 dark:text-slate-300">
-            <b class="font-semibold text-slate-900 dark:text-white">앱처럼 쓰기</b><br>
-            Safari <b class="font-semibold">공유</b> 버튼 → <b class="font-semibold">홈 화면에 추가</b>
-        </p>
-        <button type="button" @click="$store.ui.dismissIosHint()" aria-label="안내 닫기"
-            class="-m-2 p-2 text-slate-400 active:text-slate-600">
-            {% include 'ministry/partials/icon.html' with name='x' size='h-4 w-4' %}
-        </button>
-    </div>
+    <!-- 앱처럼 쓰기 안내 (브라우저별로 다르게) -->
+    {% include 'ministry/partials/install_guide.html' %}
 
     <!-- Hero Slider -->
     {% if slides %}

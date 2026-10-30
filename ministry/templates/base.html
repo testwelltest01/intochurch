@@ -18,6 +18,47 @@
     <meta name="apple-mobile-web-app-title" content="인투처치">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
+    <!-- 카카오톡 안 브라우저로 열면 휴대폰 브라우저로 자동으로 다시 엽니다 (설치·오프라인은 카톡 안에서 안 됨) -->
+    <script>
+        // 삼성 휴대폰은 삼성 인터넷, 그 밖에는 휴대폰 기본 브라우저(iPhone은 보통 Safari)로 엽니다.
+        function kakaoExternalUrl(url) {
+            return 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+        }
+        function externalBrowserUrl() {
+            var ua = navigator.userAgent;
+            var url = location.href.split('#')[0];
+            if (/android/i.test(ua) && /SM-|SAMSUNG/i.test(ua)) {
+                return 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=' + location.protocol.replace(':', '') + ';package=com.sec.android.app.sbrowser;end';
+            }
+            return kakaoExternalUrl(url);
+        }
+        function openInExternalBrowser() {
+            var target = externalBrowserUrl();
+            location.href = target;
+            // 삼성 인터넷이 꺼져 있어서 안 열리면 기본 브라우저로 다시 시도합니다.
+            if (target.indexOf('intent://') === 0) {
+                var left = false;
+                document.addEventListener('visibilitychange', function () { if (document.hidden) left = true; });
+                setTimeout(function () {
+                    if (!left && !document.hidden) location.href = kakaoExternalUrl(location.href.split('#')[0]);
+                }, 1500);
+            }
+        }
+        (function () {
+            var ua = navigator.userAgent;
+            if (!/KAKAOTALK/i.test(ua) || !/android|iphone|ipad|ipod/i.test(ua)) return;
+            try {
+                // 같은 카톡 창에서는 한 번만 (안에서 탭을 옮길 때마다 다시 열리지 않도록)
+                if (sessionStorage.getItem('kakaoRedirected') === '1') return;
+                sessionStorage.setItem('kakaoRedirected', '1');
+            } catch (e) { }
+            // 화면을 다 그린 뒤에 엽니다. 안 열려도 카톡 안 화면과 '브라우저로 열기' 버튼은 남아 있도록.
+            document.addEventListener('DOMContentLoaded', function () {
+                setTimeout(openInExternalBrowser, 300);
+            });
+        })();
+    </script>
+
     <!-- 다크 모드: 화면을 그리기 전에 적용해서 깜빡임을 막습니다 -->
     <script>
         (function () {
@@ -48,24 +89,46 @@
             if (window.Alpine) Alpine.store('ui').canInstall = true;
         });
 
+        // 브라우저마다 '홈 화면에 추가' 방법이 달라서, 어떤 안내를 보여줄지 고릅니다.
+        // PC는 안내하지 않습니다 (null).
+        function detectInstallGuide() {
+            var ua = navigator.userAgent;
+            var isIos = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            var isAndroid = /android/i.test(ua);
+            if (!isIos && !isAndroid) return null;
+            if (/KAKAOTALK/i.test(ua)) return 'kakao';                                       // 카카오톡 안 브라우저
+            if (/NAVER\(inapp|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|BAND\//i.test(ua)) return 'inapp'; // 그 밖의 앱 안 브라우저
+            if (isIos) {
+                if (/CriOS/i.test(ua)) return 'ios-chrome';
+                if (/FxiOS|EdgiOS|OPiOS|Whale/i.test(ua)) return 'ios-other';
+                return 'ios-safari';
+            }
+            if (/SamsungBrowser/i.test(ua)) return 'samsung';
+            if (/Chrome/i.test(ua) && !/EdgA|OPR|Whale|YaBrowser/i.test(ua)) return 'android-chrome';
+            return 'android-other';
+        }
+
         document.addEventListener('alpine:init', function () {
             var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            var iosHintDismissed = false;
-            try { iosHintDismissed = localStorage.getItem('iosHintDismissed') === '1'; } catch (e) { }
+            var installGuide = isStandalone ? null : detectInstallGuide();
+            var guideDismissed = false;
+            try { guideDismissed = localStorage.getItem('installGuideDismissed') === '1' || localStorage.getItem('iosHintDismissed') === '1'; } catch (e) { }
 
             Alpine.store('ui', {
                 dark: document.documentElement.classList.contains('dark'),
                 online: navigator.onLine,
                 canInstall: !!deferredInstallPrompt && !isStandalone,
-                showIosHint: isIos && !isStandalone && !iosHintDismissed,
+                installGuide: installGuide,
+                externalBrowserLabel: /android/i.test(navigator.userAgent) && /SM-|SAMSUNG/i.test(navigator.userAgent) ? '삼성 인터넷으로 열기'
+                    : /iphone|ipad|ipod/i.test(navigator.userAgent) ? 'Safari로 열기' : '브라우저로 열기',
+                showInstallGuide: !!installGuide && !guideDismissed,
                 toast: '',
                 toastTimer: null,
 
                 init() {
                     window.addEventListener('online', () => { this.online = true; });
                     window.addEventListener('offline', () => { this.online = false; });
-                    window.addEventListener('appinstalled', () => { this.canInstall = false; });
+                    window.addEventListener('appinstalled', () => { this.canInstall = false; this.showInstallGuide = false; });
                 },
                 toggleTheme() {
                     this.dark = !this.dark;
@@ -76,13 +139,17 @@
                 async install() {
                     if (!deferredInstallPrompt) return;
                     deferredInstallPrompt.prompt();
-                    await deferredInstallPrompt.userChoice;
+                    const choice = await deferredInstallPrompt.userChoice;
                     deferredInstallPrompt = null;
                     this.canInstall = false;
+                    if (choice && choice.outcome === 'accepted') this.showInstallGuide = false;
                 },
-                dismissIosHint() {
-                    this.showIosHint = false;
-                    try { localStorage.setItem('iosHintDismissed', '1'); } catch (e) { }
+                dismissInstallGuide() {
+                    this.showInstallGuide = false;
+                    try { localStorage.setItem('installGuideDismissed', '1'); } catch (e) { }
+                },
+                openInExternalBrowser() {
+                    window.openInExternalBrowser();
                 },
                 showToast(message) {
                     this.toast = message;

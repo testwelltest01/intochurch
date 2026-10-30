@@ -1,0 +1,79 @@
+{% comment %}
+'앱처럼 쓰기(홈 화면에 추가)' 안내. 브라우저마다 방법이 달라서 base.html 의
+detectInstallGuide() 가 고른 종류($store.ui.installGuide)에 맞는 안내를 보여줍니다.
+{% endcomment %}
+<div x-show="$store.ui.showInstallGuide" x-cloak class="card p-4" x-data="{ guide: $store.ui.installGuide }">
+    <div class="flex items-start gap-3">
+        <div class="icon-tile bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-400">
+            {% include 'ministry/partials/icon.html' with name='download' %}
+        </div>
+        <div class="min-w-0 flex-1 pt-0.5">
+            <p class="text-[15px] font-semibold text-slate-900 dark:text-white"
+                x-text="guide === 'kakao' || guide === 'inapp' ? '브라우저에서 열어주세요' : '홈 화면에 추가하고 앱처럼 쓰기'">홈 화면에 추가하고 앱처럼 쓰기</p>
+            <p class="mt-1 text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
+                <!-- iPhone Safari -->
+                <span x-show="guide === 'ios-safari'">
+                    아래쪽 <span class="inline-flex align-[-3px] text-brand-600 dark:text-brand-400">{% include 'ministry/partials/icon.html' with name='share' size='h-4 w-4' %}</span>
+                    <b class="font-semibold text-slate-700 dark:text-slate-200">공유</b> 버튼 →
+                    <b class="font-semibold text-slate-700 dark:text-slate-200">홈 화면에 추가</b>를 눌러주세요.
+                </span>
+                <!-- iPhone Chrome -->
+                <span x-show="guide === 'ios-chrome'">
+                    주소창 오른쪽 <span class="inline-flex align-[-3px] text-brand-600 dark:text-brand-400">{% include 'ministry/partials/icon.html' with name='share' size='h-4 w-4' %}</span>
+                    <b class="font-semibold text-slate-700 dark:text-slate-200">공유</b> 버튼 →
+                    <b class="font-semibold text-slate-700 dark:text-slate-200">홈 화면에 추가</b>를 눌러주세요.
+                </span>
+                <!-- iPhone 그 밖의 브라우저 -->
+                <span x-show="guide === 'ios-other'">
+                    <b class="font-semibold text-slate-700 dark:text-slate-200">공유</b> 메뉴 →
+                    <b class="font-semibold text-slate-700 dark:text-slate-200">홈 화면에 추가</b>를 눌러주세요.
+                    메뉴에 없으면 Safari로 열어주세요.
+                </span>
+                <!-- Android Chrome (바로 설치 버튼이 없을 때) -->
+                <span x-show="guide === 'android-chrome' && !$store.ui.canInstall">
+                    오른쪽 위 <b class="font-semibold text-slate-700 dark:text-slate-200">⋮</b> 메뉴 →
+                    <b class="font-semibold text-slate-700 dark:text-slate-200">홈 화면에 추가</b>
+                    (또는 <b class="font-semibold text-slate-700 dark:text-slate-200">앱 설치</b>)를 눌러주세요.
+                </span>
+                <!-- 삼성 인터넷 (바로 설치 버튼이 없을 때) -->
+                <span x-show="guide === 'samsung' && !$store.ui.canInstall">
+                    아래쪽 <b class="font-semibold text-slate-700 dark:text-slate-200">≡</b> 메뉴 →
+                    <b class="font-semibold text-slate-700 dark:text-slate-200">현재 페이지 추가</b> →
+                    <b class="font-semibold text-slate-700 dark:text-slate-200">홈 화면</b>을 눌러주세요.
+                </span>
+                <!-- Android 그 밖의 브라우저 -->
+                <span x-show="guide === 'android-other' && !$store.ui.canInstall">
+                    브라우저 메뉴에서 <b class="font-semibold text-slate-700 dark:text-slate-200">홈 화면에 추가</b>를 찾아주세요.
+                    메뉴에 없으면 Chrome으로 열어주세요.
+                </span>
+                <!-- Android: 바로 설치 가능 -->
+                <span x-show="$store.ui.canInstall && (guide === 'android-chrome' || guide === 'samsung' || guide === 'android-other')">
+                    아래 버튼을 누르면 바로 설치돼요.
+                </span>
+                <!-- 카카오톡 -->
+                <span x-show="guide === 'kakao'">
+                    카카오톡 안에서는 홈 화면에 추가할 수 없어서 휴대폰 브라우저로 다시 열었어요. 열리지 않았다면 아래 버튼을 눌러주세요.
+                </span>
+                <!-- 그 밖의 앱 안 브라우저 (네이버, 인스타그램 등) -->
+                <span x-show="guide === 'inapp'">
+                    이 앱 안에서는 홈 화면에 추가할 수 없어요. 메뉴에서
+                    <b class="font-semibold text-slate-700 dark:text-slate-200">다른 브라우저로 열기</b>
+                    (iPhone은 <b class="font-semibold text-slate-700 dark:text-slate-200">Safari로 열기</b>)를 눌러주세요.
+                </span>
+            </p>
+        </div>
+        <button type="button" @click="$store.ui.dismissInstallGuide()" aria-label="안내 닫기"
+            class="-m-2 p-2 text-slate-400 active:text-slate-600">
+            {% include 'ministry/partials/icon.html' with name='x' size='h-4 w-4' %}
+        </button>
+    </div>
+
+    <button type="button" x-show="$store.ui.canInstall && (guide === 'android-chrome' || guide === 'samsung' || guide === 'android-other')"
+        @click="$store.ui.install()" class="btn-primary mt-3 py-3 text-sm">
+        설치하기
+    </button>
+    <button type="button" x-show="guide === 'kakao'" @click="$store.ui.openInExternalBrowser()"
+        class="btn-primary mt-3 py-3 text-sm" x-text="$store.ui.externalBrowserLabel">
+        브라우저로 열기
+    </button>
+</div>
