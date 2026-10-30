@@ -9,8 +9,57 @@
   }
 
   body {
-    @apply font-sans antialiased text-slate-800 dark:text-slate-100;
+    @apply font-sans antialiased text-slate-900 dark:text-slate-50;
     overscroll-behavior-y: none;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* 공통 디자인 조각: 흰 카드 + 한 가지 강조색(brand) */
+@layer components {
+  .card {
+    @apply rounded-2xl bg-white dark:bg-slate-900;
+  }
+
+  .card-header {
+    @apply flex items-center justify-between px-5 pb-2 pt-5;
+  }
+
+  .card-title {
+    @apply text-[17px] font-bold text-slate-900 dark:text-white;
+  }
+
+  .card-link {
+    @apply flex items-center gap-0.5 text-sm text-slate-500 active:text-slate-700 dark:text-slate-400;
+  }
+
+  .list-row {
+    @apply flex items-center gap-3 px-5 py-4 transition active:bg-slate-50 dark:active:bg-slate-800/60;
+  }
+
+  .label {
+    @apply text-[13px] text-slate-500 dark:text-slate-400;
+  }
+
+  .icon-tile {
+    @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300;
+  }
+
+  .btn-primary {
+    @apply flex w-full items-center justify-center gap-1.5 rounded-xl bg-brand-600 py-3.5 text-[15px] font-semibold text-white transition active:bg-brand-700 disabled:opacity-40;
+  }
+
+  .btn-secondary {
+    @apply flex w-full items-center justify-center gap-1.5 rounded-xl bg-slate-100 py-3.5 text-[15px] font-semibold text-slate-700 transition active:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:active:bg-slate-700;
+  }
+
+  .input {
+    @apply w-full rounded-xl border-0 bg-slate-100 px-4 py-3.5 text-base text-slate-900 outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-brand-500 dark:bg-slate-800 dark:text-white;
+  }
+
+  /* 목록 맨 아래 "더 보기" (HTMX로 다음 항목을 이어 붙임) */
+  .more-button {
+    @apply w-full py-4 text-sm font-medium text-slate-500 transition active:bg-slate-50 disabled:opacity-50 dark:text-slate-400 dark:active:bg-slate-800/60;
   }
 }
 
@@ -31,7 +80,7 @@
 
   /* 하단 탭바(4rem) + safe-area 만큼 본문 아래 여백 */
   .pb-tabbar {
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
   }
 
   .no-scrollbar {

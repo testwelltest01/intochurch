@@ -15,8 +15,6 @@ const PRECACHE_URLS = [
   '{% static "vendor/alpine.min.js" %}',
   '{% static "vendor/htmx.min.js" %}',
   '{% static "vendor/chart.umd.min.js" %}',
-  '{% static "vendor/aos.js" %}',
-  '{% static "vendor/aos.css" %}',
   '{% static "icons/favicon-32.png" %}',
   '{% static "icons/apple-touch-icon.png" %}',
   '{% static "icons/icon-192.png" %}',

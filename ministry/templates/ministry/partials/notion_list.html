@@ -1,24 +1,18 @@
 {% for notice in notion_notices %}
-<article
-    class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <div class="mb-3 flex items-start justify-between">
-        <span
-            class="rounded bg-brand-50 px-2 py-1 text-xs font-bold uppercase text-brand-600 dark:bg-slate-700 dark:text-brand-400">Notice</span>
-        <span class="text-sm text-slate-400">{{ notice.date }}</span>
-    </div>
-    <h3 class="mb-2 text-lg font-bold text-slate-800 dark:text-slate-200">{{ notice.title }}</h3>
+<article class="card p-5">
+    <p class="label">{{ notice.date|date:"Y년 n월 j일" }}</p>
+    <h3 class="mt-1 text-[17px] font-bold leading-snug text-slate-900 dark:text-white">{{ notice.title }}</h3>
     {% if notice.content %}
-    <p class="mb-3 whitespace-pre-wrap text-sm text-slate-600 dark:text-slate-400">{{ notice.content }}</p>
+    <p class="mt-2 whitespace-pre-wrap text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">{{ notice.content }}</p>
     {% endif %}
 
     {% if notice.files %}
-    <div class="mt-2 space-y-2">
+    <div class="mt-4 flex flex-wrap gap-2">
         {% for file in notice.files %}
         <a href="{{ file.url }}" target="_blank" rel="noopener"
-            class="flex items-center rounded-lg bg-slate-50 p-3 text-sm text-slate-600 transition active:bg-brand-50 dark:bg-slate-700/50 dark:text-slate-300 dark:active:bg-slate-600">
-            <span class="mr-2 text-lg">📄</span>
+            class="flex max-w-full items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-2 text-[13px] font-medium text-slate-600 transition active:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:active:bg-slate-700">
+            {% include 'ministry/partials/icon.html' with name='paperclip' size='h-4 w-4' %}
             <span class="truncate">{{ file.name }}</span>
-            <span class="ml-auto pl-2 text-xs font-bold text-brand-500">열기</span>
         </a>
         {% endfor %}
     </div>
@@ -26,18 +20,14 @@
 </article>
 {% empty %}
 {% if notion_notices.number == 1 %}
-<div
-    class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 py-12 text-center dark:border-slate-700 dark:bg-slate-800/50">
-    <p class="text-slate-500">등록된 소식이 없습니다.</p>
-</div>
+<div class="card px-5 py-12 text-center text-sm text-slate-400">아직 소식이 없어요.</div>
 {% endif %}
 {% endfor %}
 
 <!-- 더 보기: 누르면 이 버튼 자리에 다음 소식들이 이어 붙습니다 -->
 {% if notion_notices.has_next %}
 <button type="button" hx-get="{% url 'news' %}?page={{ notion_notices.next_page_number }}" hx-target="this"
-    hx-swap="outerHTML" hx-disabled-elt="this"
-    class="w-full rounded-2xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-600 transition active:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:active:bg-slate-700">
+    hx-swap="outerHTML" hx-disabled-elt="this" class="card more-button">
     더 보기
 </button>
 {% endif %}

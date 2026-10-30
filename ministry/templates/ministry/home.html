@@ -2,173 +2,157 @@
 {% load static humanize %}
 
 {% block content %}
-<!-- iOS 홈 화면 추가 안내 (설치 전 Safari에서만 보임) -->
-<div x-show="$store.ui.showIosHint" x-cloak
-    class="mx-4 mt-4 flex items-start gap-3 rounded-2xl border border-brand-100 bg-brand-50 p-4 text-sm dark:border-slate-700 dark:bg-slate-800">
-    <span class="text-2xl">📲</span>
-    <p class="flex-1 text-slate-600 dark:text-slate-300">
-        <b class="text-slate-900 dark:text-white">앱처럼 쓰기</b><br>
-        Safari 아래쪽 <b>공유</b> 버튼을 누르고 <b>홈 화면에 추가</b>를 선택하세요.
-    </p>
-    <button type="button" @click="$store.ui.dismissIosHint()" aria-label="안내 닫기"
-        class="-m-1 p-1 text-slate-400 active:text-slate-600">✕</button>
-</div>
-
-<!-- Hero Slider -->
-{% if slides %}
-<div id="hero-slider" class="relative h-[52dvh] min-h-[320px] w-full overflow-hidden bg-slate-900">
-    {% for slide in slides %}
-    <div
-        class="slide-item absolute inset-0 h-full w-full transition-opacity duration-1000 ease-in-out {% if not forloop.first %}opacity-0 z-0{% else %}opacity-100 z-10{% endif %}">
-        <img src="{{ slide.image.url }}" class="h-full w-full object-cover opacity-70" alt="{{ slide.title }}"
-            {% if not forloop.first %}loading="lazy" {% endif %}>
-        <div
-            class="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-slate-900/90 via-slate-900/30 to-transparent">
-            <div class="px-6 text-center">
-                <h2
-                    class="slide-text translate-y-10 whitespace-pre-line text-xl font-bold leading-snug text-white opacity-0 drop-shadow-2xl transition duration-1000">{{ slide.title }}</h2>
-            </div>
+<div class="space-y-3 px-4 pt-1">
+    <!-- iOS 홈 화면 추가 안내 (설치 전 Safari에서만 보임) -->
+    <div x-show="$store.ui.showIosHint" x-cloak class="card flex items-center gap-3 p-4">
+        <div class="icon-tile bg-brand-50 text-brand-600 dark:bg-slate-800 dark:text-brand-400">
+            {% include 'ministry/partials/icon.html' with name='share' %}
         </div>
-    </div>
-    {% endfor %}
-
-    <!-- Live Badge (주일 11시~13시) -->
-    <div class="absolute right-4 top-4 z-30" x-data="{ isLive: false }"
-        x-init="const now = new Date(); if(now.getDay()===0 && now.getHours()>=11 && now.getHours()<=13) isLive=true;">
-        <div x-show="isLive" x-cloak
-            class="flex animate-pulse items-center space-x-2 rounded-full bg-red-600/90 px-3 py-1.5 text-white shadow-lg backdrop-blur"
-            x-transition>
-            <span class="relative flex h-2.5 w-2.5">
-                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-white"></span>
-            </span>
-            <span class="text-xs font-bold uppercase tracking-widest">Live Worship</span>
-        </div>
+        <p class="flex-1 text-sm leading-snug text-slate-600 dark:text-slate-300">
+            <b class="font-semibold text-slate-900 dark:text-white">앱처럼 쓰기</b><br>
+            Safari <b class="font-semibold">공유</b> 버튼 → <b class="font-semibold">홈 화면에 추가</b>
+        </p>
+        <button type="button" @click="$store.ui.dismissIosHint()" aria-label="안내 닫기"
+            class="-m-2 p-2 text-slate-400 active:text-slate-600">
+            {% include 'ministry/partials/icon.html' with name='x' size='h-4 w-4' %}
+        </button>
     </div>
 
-    <!-- Indicators -->
-    <div class="absolute bottom-14 left-1/2 z-20 flex -translate-x-1/2 space-x-2">
+    <!-- Hero Slider -->
+    {% if slides %}
+    <div id="hero-slider" class="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-slate-800">
         {% for slide in slides %}
-        <button type="button" onclick="goToSlide({{ forloop.counter0 }})" aria-label="{{ forloop.counter }}번 슬라이드"
-            class="indicator h-1 w-3 rounded-full bg-white/30 transition-all"></button>
+        <div
+            class="slide-item absolute inset-0 transition-opacity duration-700 ease-in-out {% if not forloop.first %}opacity-0 z-0{% else %}opacity-100 z-10{% endif %}">
+            <img src="{{ slide.image.url }}" class="h-full w-full object-cover" alt="{{ slide.title }}"
+                {% if not forloop.first %}loading="lazy" {% endif %}>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent"></div>
+            <p
+                class="slide-text absolute inset-x-0 bottom-0 translate-y-2 whitespace-pre-line p-5 text-[15px] font-semibold leading-relaxed text-white opacity-0 transition duration-700">{{ slide.title }}</p>
+        </div>
         {% endfor %}
-    </div>
-</div>
-{% endif %}
 
-<div class="relative z-30 space-y-10 px-4 {% if slides %}-mt-10{% else %}mt-4{% endif %}">
-    <!-- Stats Cards & Chart -->
-    {% if stat %}
-    <div class="grid grid-cols-2 gap-3" data-aos="fade-up">
-        <div
-            class="rounded-2xl border border-white/20 bg-white/95 p-4 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-800/95">
-            <div class="mb-2 flex items-center justify-between">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Last Worship</p>
-                <span class="text-lg">👥</span>
+        <!-- Live Badge (주일 11시~13시) -->
+        <div class="absolute left-4 top-4 z-30" x-data="{ isLive: false }"
+            x-init="const now = new Date(); if(now.getDay()===0 && now.getHours()>=11 && now.getHours()<=13) isLive=true;">
+            <div x-show="isLive" x-cloak
+                class="flex items-center gap-1.5 rounded-full bg-red-500 px-2.5 py-1 text-xs font-bold text-white">
+                <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-white"></span>
+                예배 중
             </div>
-            <p class="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-3xl font-bold text-transparent">
-                {{ stat.worship_attendance }}<span class="ml-1 text-sm text-slate-500">명</span></p>
-            <p class="mt-1 font-mono text-[11px] text-slate-400">{{ stat.date }} 기준</p>
         </div>
 
-        <div
-            class="rounded-2xl border border-white/20 bg-white/95 p-4 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-800/95">
-            <div class="mb-2 flex items-center justify-between">
-                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">New Comers</p>
-                <span class="text-lg">🌱</span>
-            </div>
-            <p class="bg-gradient-to-r from-green-500 to-emerald-600 bg-clip-text text-3xl font-bold text-transparent">
-                {{ stat.new_comers }}<span class="ml-1 text-sm text-slate-500">명</span></p>
-        </div>
-
-        <a href="{% url 'finance' %}"
-            class="col-span-2 flex items-center justify-between rounded-2xl border border-white/20 bg-white/95 p-4 shadow-xl backdrop-blur active:scale-[0.98] transition dark:border-slate-700 dark:bg-slate-800/95">
-            <div>
-                <p class="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Offering</p>
-                <p class="bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-2xl font-bold text-transparent">
-                    {{ stat.offering_total|intcomma }}<span class="ml-1 text-sm text-slate-500">원</span></p>
-            </div>
-            <span class="text-2xl">🙏</span>
-        </a>
-
-        <!-- Mini Chart Card -->
-        <div
-            class="col-span-2 rounded-2xl border border-white/20 bg-white/95 p-4 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-800/95">
-            <p class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">최근 4주 출석</p>
-            <div class="h-36">
-                <canvas id="miniAttendanceChart"></canvas>
-            </div>
+        <!-- 슬라이드 번호 -->
+        <div class="absolute right-4 top-4 z-30 rounded-full bg-black/40 px-2.5 py-1 text-xs font-medium text-white backdrop-blur"
+            aria-live="polite">
+            <span id="slide-current">1</span> / {{ slides|length }}
         </div>
     </div>
     {% endif %}
 
-    <!-- Story Section: Why Transparency? -->
-    <section id="about" data-aos="fade-up">
-        <h2 class="mb-2 text-xl font-bold text-slate-900 dark:text-white">왜 '투명한 사역'인가요?</h2>
-        <p class="mb-5 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-            우리는 교회가 세상 속에서 다시 신뢰를 회복하는 방법이
-            <span class="font-bold text-brand-600 dark:text-brand-400">솔직함</span>과 <span
-                class="font-bold text-brand-600 dark:text-brand-400">투명함</span>에 있다고 믿습니다.
-        </p>
+    <!-- 지난 주일 -->
+    {% if stat %}
+    <section class="card p-5">
+        <div class="flex items-baseline justify-between">
+            <h2 class="card-title">지난 주일</h2>
+            <span class="label">{{ stat.date|date:"n월 j일" }}</span>
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-3">
+            <div class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
+                <p class="label">예배 출석</p>
+                <p class="mt-1 text-2xl font-bold">{{ stat.worship_attendance }}<span
+                        class="ml-0.5 text-base font-semibold text-slate-500">명</span></p>
+            </div>
+            <div class="rounded-xl bg-slate-50 p-4 dark:bg-slate-800/60">
+                <p class="label">새가족</p>
+                <p class="mt-1 text-2xl font-bold">{{ stat.new_comers }}<span
+                        class="ml-0.5 text-base font-semibold text-slate-500">명</span></p>
+            </div>
+        </div>
+        <p class="label mt-5">최근 4주 출석</p>
+        <div class="mt-2 h-28">
+            <canvas id="miniAttendanceChart"></canvas>
+        </div>
+    </section>
 
-        <div class="no-scrollbar -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2">
-            <a href="{% url 'finance' %}"
-                class="w-[78%] shrink-0 snap-center rounded-2xl border border-slate-100 bg-white p-6 shadow-lg transition active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800">
-                <div
-                    class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-2xl dark:bg-slate-700">
-                    👁️</div>
-                <h3 class="mb-2 text-lg font-bold text-slate-900 dark:text-white">재정의 투명성</h3>
-                <p class="text-sm leading-relaxed text-slate-500 dark:text-slate-400">모든 헌금의 내역과 사용처를 1원 단위까지 실시간으로
-                    공개합니다.</p>
+    <a href="{% url 'finance' %}" class="card flex items-center gap-3 p-5 transition active:scale-[0.99]">
+        <div class="flex-1">
+            <p class="label">지난 주일 헌금</p>
+            <p class="mt-1 text-xl font-bold">{{ stat.offering_total|intcomma }}원</p>
+        </div>
+        <span class="text-sm text-slate-400">내역 보기</span>
+        <span class="text-slate-300 dark:text-slate-600">{% include 'ministry/partials/icon.html' with name='chevron-right' %}</span>
+    </a>
+    {% endif %}
+
+    <!-- 왜 '투명한 사역'인가요? -->
+    <section id="about" class="card overflow-hidden">
+        <div class="px-5 pt-5">
+            <h2 class="card-title">왜 '투명한 사역'인가요?</h2>
+            <p class="mt-1.5 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+                교회가 다시 신뢰를 얻는 방법은 솔직함과 투명함에 있다고 믿습니다.
+            </p>
+        </div>
+        <div class="mt-2 pb-2">
+            <a href="{% url 'finance' %}" class="list-row">
+                <div class="icon-tile">{% include 'ministry/partials/icon.html' with name='eye' %}</div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[15px] font-semibold">재정의 투명성</p>
+                    <p class="label">모든 헌금 내역을 1원 단위까지 공개해요</p>
+                </div>
+                <span class="text-slate-300 dark:text-slate-600">{% include 'ministry/partials/icon.html' with name='chevron-right' %}</span>
             </a>
-            <a href="{% url 'reviews' %}"
-                class="w-[78%] shrink-0 snap-center rounded-2xl border border-slate-100 bg-white p-6 shadow-lg transition active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800">
-                <div
-                    class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-2xl dark:bg-slate-700">
-                    💬</div>
-                <h3 class="mb-2 text-lg font-bold text-slate-900 dark:text-white">소통의 투명성</h3>
-                <p class="text-sm leading-relaxed text-slate-500 dark:text-slate-400">성도님들의 리뷰와 의견을 가감 없이 듣고 반영합니다.</p>
+            <a href="{% url 'reviews' %}" class="list-row">
+                <div class="icon-tile">{% include 'ministry/partials/icon.html' with name='message' %}</div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[15px] font-semibold">소통의 투명성</p>
+                    <p class="label">성도님들의 의견을 가감 없이 들어요</p>
+                </div>
+                <span class="text-slate-300 dark:text-slate-600">{% include 'ministry/partials/icon.html' with name='chevron-right' %}</span>
             </a>
-            <a href="{% url 'news' %}"
-                class="w-[78%] shrink-0 snap-center rounded-2xl border border-slate-100 bg-white p-6 shadow-lg transition active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800">
-                <div
-                    class="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-2xl dark:bg-slate-700">
-                    🤝</div>
-                <h3 class="mb-2 text-lg font-bold text-slate-900 dark:text-white">사역의 투명성</h3>
-                <p class="text-sm leading-relaxed text-slate-500 dark:text-slate-400">어떤 마음으로 사역하는지 매주 보고서로 공유합니다.</p>
+            <a href="{% url 'news' %}" class="list-row">
+                <div class="icon-tile">{% include 'ministry/partials/icon.html' with name='file-text' %}</div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[15px] font-semibold">사역의 투명성</p>
+                    <p class="label">어떤 마음으로 사역하는지 매주 나눠요</p>
+                </div>
+                <span class="text-slate-300 dark:text-slate-600">{% include 'ministry/partials/icon.html' with name='chevron-right' %}</span>
             </a>
         </div>
     </section>
 
-    <!-- 최근 소식 미리보기 -->
-    <section data-aos="fade-up">
-        <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-xl font-bold text-slate-900 dark:text-white">📢 교회 소식</h2>
-            <a href="{% url 'news' %}" class="text-sm font-bold text-brand-600 dark:text-brand-400">전체 보기 ›</a>
+    <!-- 교회 소식 미리보기 -->
+    <section class="card overflow-hidden">
+        <div class="card-header">
+            <h2 class="card-title">교회 소식</h2>
+            <a href="{% url 'news' %}" class="card-link">전체보기{% include 'ministry/partials/icon.html' with name='chevron-right' size='h-4 w-4' %}</a>
         </div>
-        <div
-            class="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-sm dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
+        <div class="pb-2">
             {% for notice in latest_notices %}
-            <a href="{% url 'news' %}" class="flex items-center gap-3 p-4 active:bg-slate-50 dark:active:bg-slate-700">
-                <span class="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-200">{{ notice.title }}</span>
-                <span class="shrink-0 text-xs text-slate-400">{{ notice.date|date:"m.d" }}</span>
+            <a href="{% url 'news' %}" class="list-row">
+                <span class="min-w-0 flex-1 truncate text-[15px]">{{ notice.title }}</span>
+                <span class="label shrink-0">{{ notice.date|date:"n.j" }}</span>
             </a>
             {% empty %}
-            <p class="p-6 text-center text-sm text-slate-500">등록된 소식이 없습니다.</p>
+            <p class="px-5 py-6 text-center text-sm text-slate-400">아직 소식이 없어요.</p>
             {% endfor %}
         </div>
     </section>
 
     <!-- 이번 주 찬양 -->
-    <section data-aos="fade-up">
-        <h2 class="mb-4 text-xl font-bold text-slate-900 dark:text-white">🎬 이번 주 찬양</h2>
-        <div class="relative aspect-video w-full overflow-hidden rounded-2xl bg-slate-200 shadow-xl dark:bg-slate-800">
-            <iframe class="absolute left-0 top-0 h-full w-full" loading="lazy"
-                src="https://www.youtube.com/embed/pJf8f2uQY1s?modestbranding=1" title="YouTube video player"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
-            </iframe>
+    <section class="card overflow-hidden">
+        <div class="card-header">
+            <h2 class="card-title">이번 주 찬양</h2>
+        </div>
+        <div class="px-5 pb-5 pt-2">
+            <div class="relative aspect-video w-full overflow-hidden rounded-xl bg-slate-100 dark:bg-slate-800">
+                <iframe class="absolute left-0 top-0 h-full w-full" loading="lazy"
+                    src="https://www.youtube.com/embed/pJf8f2uQY1s?modestbranding=1" title="YouTube video player"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
+                </iframe>
+            </div>
         </div>
     </section>
 </div>
@@ -182,7 +166,7 @@
         const slider = document.getElementById('hero-slider');
         const slides = document.querySelectorAll('.slide-item');
         const texts = document.querySelectorAll('.slide-text');
-        const indicators = document.querySelectorAll('.indicator');
+        const counter = document.getElementById('slide-current');
         const totalSlides = slides.length;
 
         if (totalSlides > 0) {
@@ -198,24 +182,18 @@
                     slide.classList.toggle('z-10', isActive);
 
                     if (isActive) {
-                        setTimeout(() => { if (texts[index]) texts[index].classList.remove('opacity-0', 'translate-y-10'); }, 100);
+                        setTimeout(() => { if (texts[index]) texts[index].classList.remove('opacity-0', 'translate-y-2'); }, 100);
                     } else if (texts[index]) {
-                        texts[index].classList.add('opacity-0', 'translate-y-10');
+                        texts[index].classList.add('opacity-0', 'translate-y-2');
                     }
                 });
-                indicators.forEach((dot, index) => {
-                    dot.classList.toggle('bg-white', index === currentSlide);
-                    dot.classList.toggle('bg-white/30', index !== currentSlide);
-                    dot.classList.toggle('w-8', index === currentSlide); // Active width
-                    dot.classList.toggle('w-3', index !== currentSlide);  // Inactive width
-                });
+                if (counter) counter.textContent = currentSlide + 1;
             }
             function restartTimer() {
                 clearInterval(timer);
-                timer = setInterval(() => changeSlide(1), 8000);
+                timer = setInterval(() => changeSlide(1), 6000);
             }
             window.changeSlide = function (direction) { currentSlide = (currentSlide + direction + totalSlides) % totalSlides; updateSlide(); }
-            window.goToSlide = function (index) { currentSlide = index; updateSlide(); restartTimer(); }
 
             let touchStartX = null;
             slider.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
@@ -237,6 +215,8 @@
         if (ctx && window.Chart) {
             const chartLabels = JSON.parse(document.getElementById('chart-labels-data').textContent);
             const chartData = JSON.parse(document.getElementById('chart-data-data').textContent);
+            Chart.defaults.font.family = 'Pretendard, sans-serif';
+            Chart.defaults.color = '#94a3b8';
             new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -244,22 +224,24 @@
                     datasets: [{
                         label: '출석',
                         data: chartData,
-                        borderColor: '#4f46e5',
-                        tension: 0.4,
+                        borderColor: '#0d9488',
+                        backgroundColor: 'rgba(13, 148, 136, 0.08)',
+                        tension: 0.35,
                         pointRadius: 3,
+                        pointBackgroundColor: '#0d9488',
                         borderWidth: 2,
                         fill: true,
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)'
                     }]
                 },
                 options: {
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { display: true, grid: { display: false } },
+                        x: { grid: { display: false }, border: { display: false }, ticks: { font: { size: 11 } } },
                         y: {
-                            display: true,
                             min: 0,
-                            max: 200
+                            grid: { color: 'rgba(148, 163, 184, 0.15)' },
+                            border: { display: false },
+                            ticks: { maxTicksLimit: 3, font: { size: 11 } }
                         }
                     },
                     maintainAspectRatio: false

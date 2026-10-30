@@ -11,8 +11,6 @@ const files = [
   ['alpinejs/dist/cdn.min.js', 'alpine.min.js'],
   ['htmx.org/dist/htmx.min.js', 'htmx.min.js'],
   ['chart.js/dist/chart.umd.min.js', 'chart.umd.min.js'],
-  ['aos/dist/aos.js', 'aos.js'],
-  ['aos/dist/aos.css', 'aos.css'],
 ];
 
 fs.mkdirSync(outDir, { recursive: true });

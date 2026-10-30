@@ -1,19 +1,19 @@
 {% extends 'base.html' %}
 
 {% block title %}오프라인 · 투명한 사역 교회{% endblock %}
+{% block app_title %}오프라인{% endblock %}
 
 {% block content %}
 <!-- 인터넷이 끊겼고, 아직 한 번도 열어보지 않은 화면일 때 보여줍니다 -->
 <div class="flex min-h-[60dvh] flex-col items-center justify-center px-8 text-center">
-    <div class="mb-4 text-5xl">📡</div>
-    <h2 class="mb-2 text-xl font-bold text-slate-900 dark:text-white">인터넷에 연결되어 있지 않아요</h2>
-    <p class="mb-8 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
+    <div class="icon-tile mb-5 h-14 w-14 rounded-2xl bg-white dark:bg-slate-900">
+        {% include 'ministry/partials/icon.html' with name='wifi-off' size='h-6 w-6' %}
+    </div>
+    <h2 class="text-lg font-bold">인터넷에 연결되어 있지 않아요</h2>
+    <p class="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
         이 화면은 아직 저장되지 않았어요.<br>
         한 번 열어본 화면은 오프라인에서도 볼 수 있어요.
     </p>
-    <button type="button" onclick="location.reload()"
-        class="rounded-full bg-brand-600 px-6 py-3 text-sm font-bold text-white shadow-lg active:bg-brand-700">
-        다시 시도
-    </button>
+    <button type="button" onclick="location.reload()" class="btn-primary mt-8 w-auto px-8">다시 시도</button>
 </div>
 {% endblock %}

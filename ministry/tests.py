@@ -41,7 +41,7 @@ class TabPageTests(TestCase):
     def test_last_page_has_no_next_button(self):
         response = self.client.get(reverse('finance'), {'page': 2}, HTTP_HX_REQUEST='true')
         self.assertNotContains(response, 'hx-get')
-        self.assertNotContains(response, '데이터가 없습니다')
+        self.assertNotContains(response, '아직 내역이 없어요')
 
 
 class ReviewTests(TestCase):
@@ -56,6 +56,15 @@ class ReviewTests(TestCase):
         self.client.post(reverse('reviews'), {'author_name': 'A', 'rating': '5', 'content': '두 번째'})
         self.assertEqual(ChurchReview.objects.count(), 1)
         self.assertContains(self.client.get(reverse('reviews')), '소중한 의견 감사합니다')
+
+    def test_rating_summary(self):
+        ChurchReview.objects.create(author_name='A', rating=5, content='좋아요', ip_address='10.0.0.1')
+        ChurchReview.objects.create(author_name='B', rating=4, content='좋아요', ip_address='10.0.0.2')
+        response = self.client.get(reverse('reviews'))
+        self.assertEqual(response.context['summary']['count'], 2)
+        self.assertEqual(response.context['summary']['stars'], 4)  # 평균 4.5 -> 반올림(짝수) 4
+        self.assertContains(response, '4.5')
+        self.assertContains(response, '리뷰 2개')
 
     def test_invalid_rating_falls_back(self):
         self.client.post(reverse('reviews'), {'author_name': 'B', 'rating': 'abc', 'content': '내용'})
