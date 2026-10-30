@@ -10,13 +10,54 @@
 
     <!-- PWA: 앱 설치 정보 + 아이콘 -->
     <link rel="manifest" href="{% url 'manifest' %}">
-    <meta name="theme-color" content="#ffffff" id="theme-color">
+    <meta name="theme-color" content="#f1f5f9" id="theme-color">
     <link rel="icon" type="image/png" sizes="32x32" href="{% static 'icons/favicon-32.png' %}">
     <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="인투처치">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <!-- 카카오톡 안 브라우저로 열면 휴대폰 브라우저로 자동으로 다시 엽니다 (설치·오프라인은 카톡 안에서 안 됨) -->
+    <script>
+        // 삼성 휴대폰은 삼성 인터넷, 그 밖에는 휴대폰 기본 브라우저(iPhone은 보통 Safari)로 엽니다.
+        function kakaoExternalUrl(url) {
+            return 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+        }
+        function externalBrowserUrl() {
+            var ua = navigator.userAgent;
+            var url = location.href.split('#')[0];
+            if (/android/i.test(ua) && /SM-|SAMSUNG/i.test(ua)) {
+                return 'intent://' + url.replace(/^https?:\/\//, '') + '#Intent;scheme=' + location.protocol.replace(':', '') + ';package=com.sec.android.app.sbrowser;end';
+            }
+            return kakaoExternalUrl(url);
+        }
+        function openInExternalBrowser() {
+            var target = externalBrowserUrl();
+            location.href = target;
+            // 삼성 인터넷이 꺼져 있어서 안 열리면 기본 브라우저로 다시 시도합니다.
+            if (target.indexOf('intent://') === 0) {
+                var left = false;
+                document.addEventListener('visibilitychange', function () { if (document.hidden) left = true; });
+                setTimeout(function () {
+                    if (!left && !document.hidden) location.href = kakaoExternalUrl(location.href.split('#')[0]);
+                }, 1500);
+            }
+        }
+        (function () {
+            var ua = navigator.userAgent;
+            if (!/KAKAOTALK/i.test(ua) || !/android|iphone|ipad|ipod/i.test(ua)) return;
+            try {
+                // 같은 카톡 창에서는 한 번만 (안에서 탭을 옮길 때마다 다시 열리지 않도록)
+                if (sessionStorage.getItem('kakaoRedirected') === '1') return;
+                sessionStorage.setItem('kakaoRedirected', '1');
+            } catch (e) { }
+            // 화면을 다 그린 뒤에 엽니다. 안 열려도 카톡 안 화면과 '브라우저로 열기' 버튼은 남아 있도록.
+            document.addEventListener('DOMContentLoaded', function () {
+                setTimeout(openInExternalBrowser, 300);
+            });
+        })();
+    </script>
 
     <!-- 다크 모드: 화면을 그리기 전에 적용해서 깜빡임을 막습니다 -->
     <script>
@@ -25,7 +66,7 @@
             try { saved = localStorage.getItem('theme'); } catch (e) { }
             var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
             document.documentElement.classList.toggle('dark', dark);
-            document.getElementById('theme-color').setAttribute('content', dark ? '#0f172a' : '#ffffff');
+            document.getElementById('theme-color').setAttribute('content', dark ? '#020617' : '#f1f5f9');
         })();
     </script>
 
@@ -37,9 +78,7 @@
     <link href="{% static 'css/output.css' %}" rel="stylesheet">
 
     <!-- Libraries (오프라인에서도 동작하도록 로컬 파일 사용, npm run vendor 로 복사) -->
-    <link href="{% static 'vendor/aos.css' %}" rel="stylesheet">
     <script src="{% static 'vendor/htmx.min.js' %}"></script>
-    <script src="{% static 'vendor/aos.js' %}"></script>
 
     <!-- 앱 전체 상태 (다크 모드, 온라인 여부, 앱 설치, 알림 메시지) -->
     <script>
@@ -50,41 +89,67 @@
             if (window.Alpine) Alpine.store('ui').canInstall = true;
         });
 
+        // 브라우저마다 '홈 화면에 추가' 방법이 달라서, 어떤 안내를 보여줄지 고릅니다.
+        // PC는 안내하지 않습니다 (null).
+        function detectInstallGuide() {
+            var ua = navigator.userAgent;
+            var isIos = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+            var isAndroid = /android/i.test(ua);
+            if (!isIos && !isAndroid) return null;
+            if (/KAKAOTALK/i.test(ua)) return 'kakao';                                       // 카카오톡 안 브라우저
+            if (/NAVER\(inapp|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|BAND\//i.test(ua)) return 'inapp'; // 그 밖의 앱 안 브라우저
+            if (isIos) {
+                if (/CriOS/i.test(ua)) return 'ios-chrome';
+                if (/FxiOS|EdgiOS|OPiOS|Whale/i.test(ua)) return 'ios-other';
+                return 'ios-safari';
+            }
+            if (/SamsungBrowser/i.test(ua)) return 'samsung';
+            if (/Chrome/i.test(ua) && !/EdgA|OPR|Whale|YaBrowser/i.test(ua)) return 'android-chrome';
+            return 'android-other';
+        }
+
         document.addEventListener('alpine:init', function () {
             var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-            var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-            var iosHintDismissed = false;
-            try { iosHintDismissed = localStorage.getItem('iosHintDismissed') === '1'; } catch (e) { }
+            var installGuide = isStandalone ? null : detectInstallGuide();
+            var guideDismissed = false;
+            try { guideDismissed = localStorage.getItem('installGuideDismissed') === '1' || localStorage.getItem('iosHintDismissed') === '1'; } catch (e) { }
 
             Alpine.store('ui', {
                 dark: document.documentElement.classList.contains('dark'),
                 online: navigator.onLine,
                 canInstall: !!deferredInstallPrompt && !isStandalone,
-                showIosHint: isIos && !isStandalone && !iosHintDismissed,
+                installGuide: installGuide,
+                externalBrowserLabel: /android/i.test(navigator.userAgent) && /SM-|SAMSUNG/i.test(navigator.userAgent) ? '삼성 인터넷으로 열기'
+                    : /iphone|ipad|ipod/i.test(navigator.userAgent) ? 'Safari로 열기' : '브라우저로 열기',
+                showInstallGuide: !!installGuide && !guideDismissed,
                 toast: '',
                 toastTimer: null,
 
                 init() {
                     window.addEventListener('online', () => { this.online = true; });
                     window.addEventListener('offline', () => { this.online = false; });
-                    window.addEventListener('appinstalled', () => { this.canInstall = false; });
+                    window.addEventListener('appinstalled', () => { this.canInstall = false; this.showInstallGuide = false; });
                 },
                 toggleTheme() {
                     this.dark = !this.dark;
                     document.documentElement.classList.toggle('dark', this.dark);
-                    document.getElementById('theme-color').setAttribute('content', this.dark ? '#0f172a' : '#ffffff');
+                    document.getElementById('theme-color').setAttribute('content', this.dark ? '#020617' : '#f1f5f9');
                     try { localStorage.setItem('theme', this.dark ? 'dark' : 'light'); } catch (e) { }
                 },
                 async install() {
                     if (!deferredInstallPrompt) return;
                     deferredInstallPrompt.prompt();
-                    await deferredInstallPrompt.userChoice;
+                    const choice = await deferredInstallPrompt.userChoice;
                     deferredInstallPrompt = null;
                     this.canInstall = false;
+                    if (choice && choice.outcome === 'accepted') this.showInstallGuide = false;
                 },
-                dismissIosHint() {
-                    this.showIosHint = false;
-                    try { localStorage.setItem('iosHintDismissed', '1'); } catch (e) { }
+                dismissInstallGuide() {
+                    this.showInstallGuide = false;
+                    try { localStorage.setItem('installGuideDismissed', '1'); } catch (e) { }
+                },
+                openInExternalBrowser() {
+                    window.openInExternalBrowser();
                 },
                 showToast(message) {
                     this.toast = message;
@@ -116,33 +181,33 @@
 <!-- PC에서는 바깥 배경 위에 모바일 폭(430px) 화면을 가운데에 보여줍니다 -->
 <body class="bg-slate-200 dark:bg-black selection:bg-brand-500 selection:text-white">
     <div id="app" x-data
-        class="relative mx-auto min-h-dvh max-w-[430px] bg-slate-50 text-slate-900 shadow-2xl shadow-slate-900/10 dark:bg-slate-900 dark:text-slate-100">
+        class="relative mx-auto min-h-dvh max-w-[430px] bg-slate-100 text-slate-900 shadow-xl ring-1 ring-slate-900/5 dark:bg-slate-950 dark:text-slate-50 dark:ring-white/5">
 
-        <!-- 상단 앱바 -->
-        <header
-            class="pt-safe sticky top-0 z-40 border-b border-slate-200/70 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90">
-            <div class="flex h-14 items-center justify-between px-4">
-                <h1 class="truncate text-lg font-bold text-slate-900 dark:text-white">
-                    {% block app_title %}<a href="{% url 'home' %}" class="text-brand-600 dark:text-brand-400">🕊️ Into
-                        Church</a>{% endblock %}
+        <!-- 상단 앱바 (배경과 같은 색) -->
+        <header class="pt-safe sticky top-0 z-40 bg-slate-100/90 backdrop-blur-md dark:bg-slate-950/90">
+            <div class="flex h-14 items-center justify-between pl-5 pr-3">
+                <h1 class="truncate text-xl font-bold tracking-tight text-slate-900 dark:text-white">
+                    {% block app_title %}<a href="{% url 'home' %}" class="text-brand-600 dark:text-brand-400">Into Church</a>{% endblock %}
                 </h1>
                 <div class="flex shrink-0 items-center gap-1">
                     <button type="button" x-show="$store.ui.canInstall" x-cloak @click="$store.ui.install()"
-                        class="rounded-full bg-brand-600 px-3 py-1.5 text-xs font-bold text-white active:bg-brand-700">
+                        class="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[13px] font-semibold text-brand-700 active:bg-slate-50 dark:bg-slate-800 dark:text-brand-300">
+                        {% include 'ministry/partials/icon.html' with name='download' size='h-4 w-4' %}
                         앱 설치
                     </button>
                     <button type="button" @click="$store.ui.toggleTheme()" aria-label="다크 모드 전환"
-                        class="flex h-10 w-10 items-center justify-center rounded-full text-lg active:bg-slate-100 dark:active:bg-slate-800">
-                        <span x-show="!$store.ui.dark">🌙</span>
-                        <span x-show="$store.ui.dark" x-cloak>☀️</span>
+                        class="flex h-10 w-10 items-center justify-center rounded-full text-slate-500 active:bg-slate-200 dark:text-slate-400 dark:active:bg-slate-800">
+                        <span x-show="!$store.ui.dark">{% include 'ministry/partials/icon.html' with name='moon' %}</span>
+                        <span x-show="$store.ui.dark" x-cloak>{% include 'ministry/partials/icon.html' with name='sun' %}</span>
                     </button>
                 </div>
             </div>
 
             <!-- 오프라인 배너 -->
             <div x-show="!$store.ui.online" x-cloak
-                class="bg-amber-100 px-4 py-2 text-center text-xs font-bold text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                오프라인 상태예요. 마지막으로 본 화면을 보여드리고 있어요.
+                class="mx-4 mb-2 flex items-center justify-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 text-[13px] font-medium text-white dark:bg-slate-800">
+                {% include 'ministry/partials/icon.html' with name='wifi-off' size='h-4 w-4' %}
+                오프라인 상태예요. 마지막으로 본 화면을 보여드려요.
             </div>
         </header>
 
@@ -154,81 +219,25 @@
 
         <!-- 알림 메시지 -->
         <div x-show="$store.ui.toast" x-cloak x-transition.opacity
-            class="fixed inset-x-0 bottom-24 z-50 mx-auto w-max max-w-[90%] rounded-full bg-slate-900/90 px-4 py-2 text-center text-sm font-bold text-white shadow-lg dark:bg-white/90 dark:text-slate-900"
+            class="fixed inset-x-0 bottom-24 z-50 mx-auto w-max max-w-[90%] rounded-xl bg-slate-800 px-4 py-3 text-center text-sm font-medium text-white shadow-lg"
             role="status" x-text="$store.ui.toast"></div>
 
         <!-- 하단 탭바 -->
         {% with current=request.resolver_match.url_name %}
         <nav aria-label="주요 메뉴"
-            class="pb-safe fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-slate-200/70 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
+            class="pb-safe fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-slate-200/80 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95">
             <ul class="grid h-16 grid-cols-5">
-                <li>
-                    <a href="{% url 'home' %}" {% if current == 'home' %}aria-current="page"{% endif %}
-                        class="flex h-full flex-col items-center justify-center gap-1 text-[11px] font-bold active:opacity-60 {% if current == 'home' %}text-brand-600 dark:text-brand-400{% else %}text-slate-400 dark:text-slate-500{% endif %}">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                            <path d="M9 22V12h6v10" />
-                        </svg>
-                        홈
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'news' %}" {% if current == 'news' %}aria-current="page"{% endif %}
-                        class="flex h-full flex-col items-center justify-center gap-1 text-[11px] font-bold active:opacity-60 {% if current == 'news' %}text-brand-600 dark:text-brand-400{% else %}text-slate-400 dark:text-slate-500{% endif %}">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-                        </svg>
-                        소식
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'finance' %}" {% if current == 'finance' %}aria-current="page"{% endif %}
-                        class="flex h-full flex-col items-center justify-center gap-1 text-[11px] font-bold active:opacity-60 {% if current == 'finance' %}text-brand-600 dark:text-brand-400{% else %}text-slate-400 dark:text-slate-500{% endif %}">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M3 3v18h18" />
-                            <path d="M18 17V9" />
-                            <path d="M13 17V5" />
-                            <path d="M8 17v-3" />
-                        </svg>
-                        재정
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'reviews' %}" {% if current == 'reviews' %}aria-current="page"{% endif %}
-                        class="flex h-full flex-col items-center justify-center gap-1 text-[11px] font-bold active:opacity-60 {% if current == 'reviews' %}text-brand-600 dark:text-brand-400{% else %}text-slate-400 dark:text-slate-500{% endif %}">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
-                        </svg>
-                        리뷰
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'location' %}" {% if current == 'location' %}aria-current="page"{% endif %}
-                        class="flex h-full flex-col items-center justify-center gap-1 text-[11px] font-bold active:opacity-60 {% if current == 'location' %}text-brand-600 dark:text-brand-400{% else %}text-slate-400 dark:text-slate-500{% endif %}">
-                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-                            <circle cx="12" cy="10" r="3" />
-                        </svg>
-                        오시는 길
-                    </a>
-                </li>
+                {% include 'ministry/partials/tab_item.html' with name='home' label='홈' icon='home' %}
+                {% include 'ministry/partials/tab_item.html' with name='news' label='소식' icon='bell' %}
+                {% include 'ministry/partials/tab_item.html' with name='finance' label='재정' icon='chart' %}
+                {% include 'ministry/partials/tab_item.html' with name='reviews' label='리뷰' icon='message' %}
+                {% include 'ministry/partials/tab_item.html' with name='location' label='오시는 길' icon='map-pin' %}
             </ul>
         </nav>
         {% endwith %}
     </div>
 
     <script>
-        AOS.init({
-            once: true,
-            duration: 600,
-        });
-
         // 서비스 워커 등록 (오프라인 캐시 + 앱 설치)
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {

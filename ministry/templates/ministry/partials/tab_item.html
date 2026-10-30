@@ -1,0 +1,7 @@
+<li>
+    <a href="{% url name %}" {% if current == name %}aria-current="page"{% endif %}
+        class="flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium transition active:scale-95 {% if current == name %}text-slate-900 dark:text-white{% else %}text-slate-400 dark:text-slate-500{% endif %}">
+        {% include 'ministry/partials/icon.html' with name=icon size='h-6 w-6' stroke='1.8' %}
+        {{ label }}
+    </a>
+</li>

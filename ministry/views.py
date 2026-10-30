@@ -4,6 +4,7 @@ import urllib.request
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.core.paginator import Paginator
+from django.db.models import Avg, Count
 from django.conf import settings
 from django.views.decorators.vary import vary_on_headers
 from .models import WeeklyReport, FinancialTransaction, ChurchReview, NotionNotice
@@ -139,7 +140,9 @@ def reviews(request):
     review_page = Paginator(ChurchReview.objects.order_by('-created_at'), 6).get_page(request.GET.get('page', 1))
     if request.headers.get('HX-Request'):
         return render(request, 'ministry/partials/review_list.html', {'reviews': review_page})
-    return render(request, 'ministry/reviews.html', {'reviews': review_page, 'has_reviewed_today': has_reviewed_today})
+    summary = ChurchReview.objects.aggregate(average=Avg('rating'), count=Count('id'))
+    summary['stars'] = round(summary['average'] or 0)
+    return render(request, 'ministry/reviews.html', {'reviews': review_page, 'has_reviewed_today': has_reviewed_today, 'summary': summary})
 
 
 def location(request):

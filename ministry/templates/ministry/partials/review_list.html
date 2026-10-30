@@ -1,35 +1,32 @@
 {% for review in reviews %}
-<div class="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-    <div class="mb-3 flex items-center">
+<div class="px-5 py-4">
+    <div class="flex items-center gap-3">
         <div
-            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-accent text-sm font-bold text-white shadow-md">
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-50 text-sm font-semibold text-brand-700 dark:bg-brand-950 dark:text-brand-300">
             {{ review.author_name|slice:":1" }}
         </div>
-        <div class="ml-3 min-w-0">
-            <p class="truncate text-sm font-bold text-slate-900 dark:text-white">{{ review.author_name }}</p>
-            <div class="flex text-xs text-yellow-400">
-                {% if review.rating >= 1 %}★{% else %}☆{% endif %}
-                {% if review.rating >= 2 %}★{% else %}☆{% endif %}
-                {% if review.rating >= 3 %}★{% else %}☆{% endif %}
-                {% if review.rating >= 4 %}★{% else %}☆{% endif %}
-                {% if review.rating >= 5 %}★{% else %}☆{% endif %}
+        <div class="min-w-0 flex-1">
+            <p class="truncate text-[15px] font-semibold text-slate-900 dark:text-white">{{ review.author_name }}</p>
+            <div class="flex items-center gap-1.5">
+                <span class="flex items-center gap-0.5 text-[13px] font-semibold text-amber-500">
+                    {% include 'ministry/partials/icon.html' with name='star' size='h-3.5 w-3.5' filled=True stroke='0' %}{{ review.rating }}
+                </span>
+                <span class="text-[13px] text-slate-400">· {{ review.created_at|date:"Y.n.j" }}</span>
             </div>
         </div>
-        <span class="ml-auto shrink-0 text-xs text-slate-400">{{ review.created_at|date:"Y.m.d" }}</span>
     </div>
-    <p class="whitespace-pre-line text-sm leading-relaxed text-slate-600 dark:text-slate-300">{{ review.content }}</p>
+    <p class="mt-2.5 whitespace-pre-line break-words text-[15px] leading-relaxed text-slate-600 dark:text-slate-300">{{ review.content }}</p>
 </div>
 {% empty %}
 {% if reviews.number == 1 %}
-<div class="rounded-2xl bg-white p-8 text-center text-slate-500 dark:bg-slate-800">아직 리뷰가 없습니다. 첫 리뷰를 남겨주세요!</div>
+<p class="px-5 py-10 text-center text-sm text-slate-400">아직 리뷰가 없어요. 첫 리뷰를 남겨주세요!</p>
 {% endif %}
 {% endfor %}
 
 <!-- 더 보기: 누르면 이 버튼 자리에 다음 리뷰들이 이어 붙습니다 -->
 {% if reviews.has_next %}
 <button type="button" hx-get="{% url 'reviews' %}?page={{ reviews.next_page_number }}" hx-target="this"
-    hx-swap="outerHTML" hx-disabled-elt="this"
-    class="w-full rounded-2xl border border-slate-200 bg-white py-3 text-sm font-bold text-slate-600 transition active:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:active:bg-slate-700">
+    hx-swap="outerHTML" hx-disabled-elt="this" class="more-button border-t border-slate-100 dark:border-slate-800">
     더 보기
 </button>
 {% endif %}

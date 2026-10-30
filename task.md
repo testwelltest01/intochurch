@@ -36,8 +36,10 @@
 - [x] manifest (`/manifest.webmanifest`) + 아이콘 (`static/icons/`, 임시 아이콘)
 - [x] 서비스 워커 (`/sw.js`): 본 화면 저장, 오프라인 안내 화면 (`/offline/`)
 - [x] 오프라인에서 리뷰 등록 막기
-- [x] 앱 설치 버튼 (Android) / 홈 화면 추가 안내 (iOS)
+- [x] 앱 설치 버튼 (Android) / 브라우저별 홈 화면 추가 안내 (Safari, iPhone Chrome, Android Chrome, 삼성 인터넷, 앱 안 브라우저)
+- [x] 카카오톡으로 열면 휴대폰 브라우저로 자동 전환 (삼성 휴대폰은 삼성 인터넷, iPhone은 기본 브라우저)
 - [x] 테스트 (`python manage.py test ministry`)
+- [x] 디자인 정리: 회색 배경 + 흰 카드, 강조색 하나(brand), 선 아이콘, 한글 라벨, 스크롤 애니메이션(AOS) 제거, 리뷰 쓰기 바텀시트
 - [ ] 정식 로고로 아이콘 교체
 - [ ] 푸시 알림 (iOS는 홈 화면에 설치한 경우만 가능)
 - [ ] 노션 공지 주기적 동기화 (지금은 DB가 비었을 때 1번만 가져옴)
